@@ -27,6 +27,16 @@
 #include "../components/telemetry/wifi_server.h"
 #include "../components/telemetry/telemetry.h"
 
+
+void app_main(void)
+{
+    printf("EDNA started!\n");
+
+    while (1) {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
 static const char *TAG = "MAIN";
 
 // Shared state — written by IMU task, read by flight controller task.
