@@ -7,7 +7,7 @@
 #include "config.h"
 #include "esp_wifi.h"
 #include "esp_event.h"
-#include "esp_log.h"
+#include "log.h"
 #include "lwip/sockets.h"
 #include "lwip/netdb.h"
 #include <string.h>

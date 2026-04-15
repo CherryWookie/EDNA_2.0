@@ -6,7 +6,7 @@
 #include "mpu6050.h"
 #include "config.h"
 #include "driver/i2c.h"
-#include "esp_log.h"
+#include "log.h"
 #include <math.h>
 
 static const char *TAG = "MPU6050";

@@ -86,7 +86,7 @@
 // -----------------------------------------------------------------------------
 // WiFi / Telemetry
 // -----------------------------------------------------------------------------
-#define WIFI_SSID           "esp32drone"
+#define WIFI_SSID           "edna"
 #define WIFI_PASSWORD       "quadcopter"     // Min 8 chars for WPA2
 #define WIFI_CHANNEL        1
 #define WIFI_MAX_CONN       1
