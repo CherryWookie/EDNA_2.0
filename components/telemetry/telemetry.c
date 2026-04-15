@@ -19,8 +19,8 @@
 
 #include "telemetry.h"
 #include "wifi_server.h"
-#include "../../main/config.h"
-#include "../flight_controller/flight_controller.h"
+#include "config.h"
+#include "flight_controller.h"
 #include "esp_log.h"
 #include "lwip/sockets.h"
 #include "freertos/FreeRTOS.h"

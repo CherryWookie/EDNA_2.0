@@ -9,7 +9,7 @@
 // =============================================================================
 
 #include "esc.h"
-#include "../../main/config.h"
+#include "config.h"
 #include "driver/ledc.h"
 #include "esp_log.h"
 

@@ -4,7 +4,7 @@
 // =============================================================================
 
 #include "mpu6050.h"
-#include "../../main/config.h"
+#include "config.h"
 #include "driver/i2c.h"
 #include "esp_log.h"
 #include <math.h>

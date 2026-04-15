@@ -19,13 +19,13 @@
 #include "nvs_flash.h"
 
 #include "config.h"
-#include "../components/imu/mpu6050.h"
-#include "../components/imu/kalman.h"
-#include "../components/esc/esc.h"
-#include "../components/flight_controller/flight_controller.h"
-#include "../components/controller/controller.h"
-#include "../components/telemetry/wifi_server.h"
-#include "../components/telemetry/telemetry.h"
+#include "mpu6050.h"
+#include "kalman.h"
+#include "esc.h"
+#include "flight_controller.h"
+#include "controller.h"
+#include "wifi_server.h"
+#include "telemetry.h"
 
 
 void app_main(void)

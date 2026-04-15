@@ -4,7 +4,7 @@
 // =============================================================================
 
 #include "wifi_server.h"
-#include "../../main/config.h"
+#include "config.h"
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"

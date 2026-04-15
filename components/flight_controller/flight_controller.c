@@ -10,8 +10,8 @@
 
 #include "flight_controller.h"
 #include "motor_mix.h"
-#include "../esc/esc.h"
-#include "../../main/config.h"
+#include "esc.h"
+#include "config.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include <stdio.h>

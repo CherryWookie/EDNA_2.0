@@ -3,7 +3,7 @@
 // =============================================================================
 
 #include "motor_mix.h"
-#include "../../main/config.h"
+#include "config.h"
 
 static uint32_t clamp_us(float val) {
     if (val < ESC_PWM_MIN_US) return ESC_PWM_MIN_US;

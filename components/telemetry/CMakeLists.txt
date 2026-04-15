@@ -1,14 +1,13 @@
 idf_component_register(
-    SRCS "main.c"
+    SRCS "wifi_server.c" "telemetry.c"
     INCLUDE_DIRS "."
     REQUIRES
-        imu
-        esc
         flight_controller
-        controller
-        telemetry
-        nvs_flash
         esp_wifi
+        esp_event
+        esp_netif
+        lwip
         freertos
-        esp_timer
+        esp_log
+        main
 )

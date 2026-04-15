@@ -3,7 +3,7 @@
 // =============================================================================
 
 #include "pid.h"
-#include "../../main/config.h"
+#include "config.h"
 
 void pid_init(pid_state_t *p, float kp, float ki, float kd) {
     p->kp             = kp;
