@@ -21,7 +21,7 @@
 #include "wifi_server.h"
 #include "config.h"
 #include "flight_controller.h"
-#include "log.h"
+#include "esp_log.h"
 #include "lwip/sockets.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"

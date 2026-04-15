@@ -8,6 +8,6 @@ idf_component_register(
         esp_netif
         lwip
         freertos
-        log
+        esp_log
         main
 )

@@ -11,7 +11,7 @@
 #include "esc.h"
 #include "config.h"
 #include "driver/ledc.h"
-#include "log.h"
+#include "esp_log.h"
 
 static const char *TAG = "ESC";
 
