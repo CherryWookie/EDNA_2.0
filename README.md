@@ -1,358 +1,213 @@
-# DIY Quadcopter
+# EDNA 2.0 — DIY ESP32 Quadcopter
+**Michael Sell & Ben Schaser**
 
-Michael Sell & Ben Schaser
+---
 
-## Table of Contents:
+## Table of Contents
+- [Introduction](#introduction)
+- [Resources](#resources)
+- [Materials](#materials)
+- [Construction](#construction)
+- [Software Setup](#software-setup)
+- [Bluepad32 + ESP-IDF v6.0 Integration](#bluepad32--esp-idf-v60-integration)
+- [Connectivity](#connectivity)
+- [ESC Calibration](#esc-calibration)
+- [Troubleshooting](#troubleshooting)
+- [PID](#pid)
 
-[`Introduction](#introduction)
-
-[`Recources`](#resources)
-
-[`Materials`](#materials)
-
-[`Calculations`](#calculations)
-
-[`Construction`](#construction)
-
-[`Troubleshooting`](#troubleshooting)
-
-[`PID`](#pid)
+---
 
 ## Introduction
 
-#
-
-This project is intended to provide a research experience within computer science.
-It will include reading of scientific literature, exploring unsolved problems, and
-making progress on difficult problems within CS.
-The goal is to understand the hardware and software associated with quadcopter drones. We will build a drone that will include a frame,
-motors and their controllers, a microcontroller, and a battery. This hardware
-will be controlled by writing software that controls the motors, communicates
-with a remote control, and provides smooth control to produce stable flight.
+This project is intended to provide a research experience within computer science. It includes reading scientific literature, exploring unsolved problems, and making progress on difficult problems within CS. The goal is to understand the hardware and software associated with quadcopter drones — building a drone with a frame, motors, ESCs, a microcontroller, and a battery, controlled by software that handles motor control, Bluetooth gamepad input, and stable flight via a PID controller.
 
 ### Objectives
-
 - Gain an intimate knowledge of drone hardware and commonly used software techniques
-- Be able to apply this knowledge to build a drone that can be flown via
-  remote control
-- Gain experience in writing documentation for the hardware and software
+- Build a drone that can be flown via remote control
+- Gain experience writing documentation for hardware and software
+
+---
 
 ## Resources
 
-#
-
-- [`Bluepad32` Game Controller Library](https://retro.moe/2020/11/24/bluepad32-gamepad-support-for-esp32/)
+- [Bluepad32 Game Controller Library](https://retro.moe/2020/11/24/bluepad32-gamepad-support-for-esp32/)
 - [ESP Proprietary Drones](https://espressif-docs.readthedocs-hosted.com/projects/espressif-esp-drone/en/latest/gettingstarted.html)
 - [ESP with PWM and Servo Control](https://dronebotworkshop.com/esp32-servo/#ESP32_PWM)
-- [How Brushless Motors work and how to Control them with ESC/Arduino](https://www.youtube.com/watch?v=uOQk8SJso6Q)
+- [How Brushless Motors Work and How to Control Them](https://www.youtube.com/watch?v=uOQk8SJso6Q)
 - [Quadcopter Physics and Control Software](https://andrew.gibiansky.com/blog/physics/quadcopter-dynamics/)
-- [Drone Mechanics Review](<Resources/review-drones%20(1).pdf>)
+- [Drone Mechanics Review](Resources/review-drones.pdf)
 - [Quadcopter Calculator](https://www.ecalc.ch/xcoptercalc.php)
-- [ESC Calibration Video (w/really funny voice inflections)](https://youtu.be/t-w5Oog8Jcg)
-- [ESC Calibration Library Github Link](https://github.com/lobodol/ESC-calibration)
+- [ESC Calibration Video](https://youtu.be/t-w5Oog8Jcg)
+- [ESC Calibration Library](https://github.com/lobodol/ESC-calibration)
 
-`Motor Bench Tests:`
-In order to accurately estimate how much thrust our propellers and motors are capable of producing, we took data from three different tests that used roughly the same spec of motors we had and averaged the three to produce a thrust estimate for our drone.
-
+**Motor Bench Tests** — data from three similar-spec motor tests averaged to estimate thrust:
 - [Test 1](https://www.youtube.com/watch?v=77WlZwNHjo8&t=430s)
-- [Test 2](https://www.google.com/search?q=2306+2450KV+Brushless+Motor+bench+test&rlz=1C5GCEM_enUS1028US1028&biw=1280&bih=696&tbm=vid&sxsrf=AJOqlzWs4r4yYQFD0tcjWqWzBB7pllfhbQ%3A1675227781592&ei=hfLZY8TmI7ahptQPzN6msA4&ved=0ahUKEwiEvdvmxfP8AhW2kIkEHUyvCeYQ4dUDCA0&uact=5&oq=2306+2450KV+Brushless+Motor+bench+test&gs_lcp=Cg1nd3Mtd2l6LXZpZGVvEAMyBQghEKsCOgQIIxAnOgUIABCiBDoHCAAQHhCiBFDrAljhDWDKDmgAcAB4AIABbogB4AiSAQM5LjOYAQCgAQHAAQE&sclient=gws-wiz-video#fpstate=ive&vld=cid:67e3aa07,vid:T0EzXr54jb8)
+- [Test 2](https://www.youtube.com/watch?v=T0EzXr54jb8)
 - [Test 3](https://www.youtube.com/watch?v=yRARMQXxQSY)
+
+---
 
 ## Materials
 
-#
+| Component | Link |
+|---|---|
+| ESP32-WROOM-32D | [Amazon](https://www.amazon.com/HiLetgo-ESP-WROOM-32-Development-Microcontroller-Integrated/dp/B0718T232Z) · [Datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-wroom-32d_esp32-wroom-32u_datasheet_en.pdf) |
+| 295mm Carbon Fiber Frame (7") | [Amazon](https://www.amazon.com/dp/B086X2JZD6) |
+| iFlight XING-E Pro 2306 2450KV Motors | [Amazon](https://www.amazon.com/iFlight-2450KV-Brushless-Racing-Quadcopter/dp/B096RTCGDT) |
+| 4-in-1 ESC | [Amazon](https://www.amazon.com/dp/B09SNWZRDG) |
+| 4S LiPo Battery (3000–5500mAh) | [Amazon](https://www.amazon.com/HOOVO-Battery-5500mAh-Connector-Compatible/dp/B09FJZKPKV) |
+| 7" Propellers | [Amazon](https://www.amazon.com/12PCS-HQProp-7X4X3-Light-Range/dp/B09NV9CGG2) |
+| Buck Converter (5V output) | [Amazon](https://www.amazon.com/DZS-Elec-Adjustable-Electronic-Stabilizer/dp/B06XRN7NFQ) |
+| LiPo Charger | [Amazon](https://www.amazon.com/Haisito-HB6-lipo-Charger/dp/B08C592PNV) |
+| EC5 Battery Adapters | [Amazon](https://www.amazon.com/FLY-RC-Connector-Silicone-11-8inch/dp/B07C23S3RK) |
 
-- [`ESP32-WROOM-32D`](https://www.amazon.com/HiLetgo-ESP-WROOM-32-Development-Microcontroller-Integrated/dp/B0718T232Z/ref=sr_1_3?keywords=esp32+vroom+32D&qid=1676402037&sr=8-3)
-
-  - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-wroom-32d_esp32-wroom-32u_datasheet_en.pdf">View DataSheet</a>
-
-- [`295mm Drone Frame (7inch Carbon Fiber)`](https://www.amazon.com/dp/B086X2JZD6/ref=sspa_dk_detail_1?psc=1&pd_rd_i=B086X2JZD6&pd_rd_w=WCDXi&content-id=amzn1.sym.dd2c6db7-6626-466d-bf04-9570e69a7df0&pf_rd_p=dd2c6db7-6626-466d-bf04-9570e69a7df0&pf_rd_r=J0KNY7VF83TW2ERNHBJ2&pd_rd_wg=QHlVM&pd_rd_r=0c775401-ea1b-4a0c-b214-b0ee40c58d4a&s=toys-and-games&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfdGhlbWF0aWM&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUExMUUxVjBDT1VUMUQ2JmVuY3J5cHRlZElkPUEwNzk4MTg1MUw0UFRLT0lKMVhDMSZlbmNyeXB0ZWRBZElkPUEwNjY2MjQwMUpNTklOWE8xSFY2WSZ3aWRnZXROYW1lPXNwX2RldGFpbF90aGVtYXRpYyZhY3Rpb249Y2xpY2tSZWRpcmVjdCZkb05vdExvZ0NsaWNrPXRydWU=)
-
-- [`Motors`](https://www.amazon.com/iFlight-2450KV-Brushless-Racing-Quadcopter/dp/B096RTCGDT/ref=sr_1_2_sspa?crid=186K7HOMICKND&keywords=fpv+drone+motors+2306&qid=1675195938&sprefix=fpv+drone+motors+2306%2Caps%2C211&sr=8-2-spons&ufe=app_do%3Aamzn1.fos.006c50ae-5d4c-4777-9bc0-4513d670b6bc&psc=1&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUExUkZQWjgwTlJNOFpGJmVuY3J5cHRlZElkPUEwODEzNDE4MlVaRUJKS0UwV1pJTCZlbmNyeXB0ZWRBZElkPUEwMDc5NDgxMUYxQkdFR1IxRVRXNiZ3aWRnZXROYW1lPXNwX2F0ZiZhY3Rpb249Y2xpY2tSZWRpcmVjdCZkb05vdExvZ0NsaWNrPXRydWU=)
-
-  - <https://shop.iflight-rc.com/XING-E-Pro-2306-4S-6S-FPV-Motor-pro1565>
-
-- [`4 in 1 ESC`](https://www.amazon.com/dp/B09SNWZRDG/ref=sspa_dk_detail_0?psc=1&pd_rd_i=B09SNWZRDG&pd_rd_w=Mll1v&content-id=amzn1.sym.bff6e147-54ad-4be3-b4ea-ec19ea6167f7&pf_rd_p=bff6e147-54ad-4be3-b4ea-ec19ea6167f7&pf_rd_r=2F9ZJ0W92CTRR8411K03&pd_rd_wg=JeM0S&pd_rd_r=8f039164-7b73-4ce9-93e9-99d09ca311aa&s=electronics&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWwy&smid=A2J1A69ATLC913&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUEzVVdDVjFVVjE0UFZDJmVuY3J5cHRlZElkPUEwNTExNjE5MjU1SFlCUUUzUUhVVyZlbmNyeXB0ZWRBZElkPUEwNDEzNTA0MjRPU09XOVZGQTA1OCZ3aWRnZXROYW1lPXNwX2RldGFpbDImYWN0aW9uPWNsaWNrUmVkaXJlY3QmZG9Ob3RMb2dDbGljaz10cnVl)
-
-- [`Battery`](https://www.amazon.com/HOOVO-Battery-5500mAh-Connector-Compatible/dp/B09FJZKPKV/ref=sr_1_8?keywords=hoovo+4s+5500ma+lipo+battery&qid=1675199066&sr=8-8&ufe=app_do%3Aamzn1.fos.006c50ae-5d4c-4777-9bc0-4513d670b6bc) \* [3000mAh 4S Battery](https://www.amazon.com/HRB-3000Mah-Battery-Airplane-Traxxas/dp/B06XKNM73N/ref=sr_1_1_sspa?crid=30DEGJM5CF0MQ&keywords=hoovo+4s+2200ma+lipo+battery+60c&qid=1677012077&sprefix=hoovo+4s+2200ma+lipo+battery+60c%2Caps%2C129&sr=8-1-spons&psc=1&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUEzUE9MOUdWT1BGTEFPJmVuY3J5cHRlZElkPUEwMzQ5MzQyMTdJWldWVUhOWUVGSiZlbmNyeXB0ZWRBZElkPUEwNzQyMDUyMTVQMlNMVTIxQ0tBOCZ3aWRnZXROYW1lPXNwX2F0ZiZhY3Rpb249Y2xpY2tSZWRpcmVjdCZkb05vdExvZ0NsaWNrPXRydWU=)
-- [`Propellers 7”`](https://www.amazon.com/12PCS-HQProp-7X4X3-Light-Range/dp/B09NV9CGG2/ref=sr_1_12?crid=8WZDZD947POE&keywords=FPV+7%22+props&qid=1675798270&s=toys-and-games&sprefix=fpv+7+props%2Ctoys-and-games%2C98&sr=1-12)
-
-- [`Buck Converter`](https://www.amazon.com/DZS-Elec-Adjustable-Electronic-Stabilizer/dp/B06XRN7NFQ/ref=sxin_15_pa_sp_search_thematic_sspa?content-id=amzn1.sym.fe3abdfa-d248-4e07-8b0d-b8a0a47d4a6c%3Aamzn1.sym.fe3abdfa-d248-4e07-8b0d-b8a0a47d4a6c&crid=2WEEA633BVTRX&cv_ct_cx=step+down+dc+voltage+converter&keywords=step+down+dc+voltage+converter&pd_rd_i=B06XRN7NFQ&pd_rd_r=9490743f-4ec6-4445-b12f-edb43e1d4aa7&pd_rd_w=IANd8&pd_rd_wg=dkxLE&pf_rd_p=fe3abdfa-d248-4e07-8b0d-b8a0a47d4a6c&pf_rd_r=NXVM7FCRCKWPGDQKD34G&qid=1675364662&s=electronics&sprefix=step+down+dc+voltage+converter%2Celectronics%2C105&sr=1-2-a73d1c8c-2fd2-4f19-aa41-2df022bcb241-spons&psc=1&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUFQRU41NEZFNEdRT0UmZW5jcnlwdGVkSWQ9QTA1MzY0NDcyODhLWU9BWU0ySDlMJmVuY3J5cHRlZEFkSWQ9QTA2Nzk2NzAxMkoxS1lZWUdYRzlHJndpZGdldE5hbWU9c3Bfc2VhcmNoX3RoZW1hdGljJmFjdGlvbj1jbGlja1JlZGlyZWN0JmRvTm90TG9nQ2xpY2s9dHJ1ZQ==)
-
-- [`Battery Charger`](https://www.amazon.com/Haisito-HB6-lipo-Charger/dp/B08C592PNV/ref=sr_1_2_sspa?keywords=4s+lipo+battery+charger+eC5&qid=1675796088&sr=8-2-spons&psc=1&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUExNE5CMTY4WFRVREZTJmVuY3J5cHRlZElkPUEwOTcyMjQwQTc2SUxKTUREVTYxJmVuY3J5cHRlZEFkSWQ9QTA4MjI3NzgyVksxMEJGUUZTTVE3JndpZGdldE5hbWU9c3BfYXRmJmFjdGlvbj1jbGlja1JlZGlyZWN0JmRvTm90TG9nQ2xpY2s9dHJ1ZQ==)
-
-- [`Battery Adapters`](https://www.amazon.com/FLY-RC-Connector-Silicone-11-8inch/dp/B07C23S3RK/ref=sr_1_10?crid=16JVO0JYO4LT5&keywords=lipo%2BeC5%2Badapter&qid=1675796767&sprefix=lipo%2Bec5%2Badapter%2Caps%2C143&sr=8-10&th=1)
-
-## Calculations
-
-## Installing Libraries (Ben you can do this thanks bb)
-
-1. Install ESP-IDF v4.4 and dependencies found [HERE](https://docs.espressif.com/projects/esp-idf/en/v4.4.4/esp32/get-started/index.html).
-2. Install Espressif IDF VSCode extension.
-3. In VSCode, open command palette and choose ESP-IDF: Configure ESP-IDF Extension.
-4. Select 'Use Existing Setup' and wait for completion.
-5. Clone this repository into a new folder using `git clone https://github.com/CherryWookie/ESP32-Drone`
-6. Open FlightControl folder in VSCode.
-7. Build and flash to ESP32 board using built-in IDF buttons on bottom toolbar.
-8. MBL Quadcopter Telemetry Console can be opened by running `MBL_QTC` in a python shell.
-9. Python library `tkinter` will need to be installed for the MBL_QTC to run properly.
-
-## Connectivity
-
-The FlightControl project is built on Ricardo Quesada's Bluepad32 library which enables us to connect the ESP32 to many different kinds of game controllers in order to control the drone. WiFi connectivity is also established to provide interaction and manipulation of PID constants as well as observation of telemetry data through the MBL Quadcopter Telemetry Console, found in the PythonScripts folder. The ESP32 board acts as a UDP server, so the computer that runs the telemetry console will need to connect to the ESP32 network, labeled as `esp32drone`, in order to send and receive data.
-
-## ESC Calibration
-
-To calibrate our 4 in 1 ESC, we used the following procedure:
-
-_(Note:Steps may vary depending on ESC Model.)_
-
-<Font Size= 4>`Steps:`</Font>
-
-1. Power ESP ONLY while sending 2000 PWM (Max throttle)
-2. Plug in the battery/power on the ESC. A series of beeps should ensue.
-3. While the ESC is still plugged in, send 1000 PWM (Min throttle). Another different series of beeps should follow.
-4. Unplug battery from ESC. Calibration should be complete.
-
-NOTE: After calibration is completed successfully, the power up should result in only one sycronized 3 beep series instead of a series of different beeps. The different beep patterns can be deciphered in your specific ESC manual; however, for our purposes, we used a third party ESC to decipher our beeps and found them to be quite similar.
-
-```C++
-ESC VScode code
-```
-
-<details>
-<summary>Failed Attempts</summary>
-<br>
-Using the [ESC-Calibration.io](https://github.com/lobodol/ESC-calibration) from lobodo we were able to calibrate the esc by finding max and min throttle and then running the test function that starts at minimum throttle and goes to max. We ended up using an Arduino UNO to perform the calibration as the library wasn't working with the ESP32 and kept giving an error of 'Timed out waiting for packet header'. We tried it in arduino IDE along with VSCode and none worked with the ESP32. We anticipate that the library wasn't friendly with the model of ESP32? Not sure
-
-As we were testing the motors with the Arduino, we were able to calibrate them individually without a problem; however, when we started to test all four of them at once, at least one motor remained motionless. To remedy this, we switched back over to the ESP32 board and used the following code to test our motors with through VScode and all four worked simultaneously without a problem
-
-</details>
-
-#
+---
 
 ## Construction
 
-### `Frame/General`
+### Frame
+Follow the included frame instructions. The ESC mounts with included screws, shock absorbers, and nuts.
 
-For the frame construction, we followed the inluded instructions. The ESC was simply put on with the included screws, shock absorbers, and nuts.
+### Soldering / ESC
+Hold the iron at an angle to maximize contact with the ESC pads. Pre-tin the pads before placing the wire. Let the chip cool between solder joints to avoid heat damage. The motor lead pins on top of the ESC didn't hold solder well — splice instead to the short Molex connector included with the ESC.
 
-### Soldering/ESC
+### Buck Converter
+Tune to approximately 5.41V output using the onboard potentiometer before connecting to the ESP32.
 
-Soldering the wires onto the ESC was unnecessarily difficult. What ended up working the best was to hold the iron at an angle so that as much of the iron as possible was in contact with the ESC metal contacts. Adding solder to the contacts prior to placing the wire worked well also. Holding the wire down with the iron while resting it in position on top of the contacts and adding solder eventually was the best method. Remember to be aware of any stray solder connecting any of the chips on the ESC.
+### ESP32
+Mount on a prototype PCB. Solder the ESP into the PCB and route wiring underneath to connect to the ESC leads at the back of the frame.
 
-Keep in mind that the ESC will get very hot during this process so make sure to let the chip cool down in between solders to avoid burning the chip.
+### MPU-6050 Gyro
+Orient with `x` axis facing down, `y` axis pointing backward, `z` axis pointing left. Apply 90° manual offsets in software to account for this. Occasional overshoot from the Kalman filter is acceptable within expected range of motion.
 
-With the motor leads coming off of the ESC, we initially tried soldering the wires to the pins on top of the ESC but quickly realized that it wasn't viable as the pins weren't holding solder very well. We ended up splicing wires to the short small Molex connector that was included with the ESC.
+---
 
-### `Buck Converter`
+## Software Setup
 
-We tested the converter first and tuned it to approximately 5.41 V output using the onboard potentiometer.
+### Prerequisites
+- [ESP-IDF v6.0](https://docs.espressif.com/projects/esp-idf/en/v6.0/esp32/get-started/index.html) installed at `C:\esp\v6.0\esp-idf`
+- Git with submodule support
+- Python in PATH
+- VS Code + ESP-IDF extension (optional but recommended)
 
-### `ESP32`
+### Every New Terminal Session
+> Always run this before any `idf.py` command:
+```cmd
+C:\esp\v6.0\esp-idf\export.bat
+```
 
-We opted to use a prototype PCB board to run our wiring through. We soldered the ESP into the PCB and ran wiring underneath in order to connect to the wires coming out of the ESC to the back of the drone.
-
-### `MPU 6050 Gyro Module`
-
-For this sensor, we had slight issues with the unit overshooting the actual degree of inclination and slowly coming back down to the expected value. This is most likely due to the Kalman filter library that we used. It didn't seem to be giving us a lot of problems besides an occasional overshoot within the range of motion that we were expecting so we opted to use it for the time being.
-
-Another thing we had to account for was our position. We oriented our MPU unit with the `x axis` facing down, the `y axis` pointing backwards, and the `z axis` pointing to the left of the drone. Because of this, we had to add some 90 degree manual offsets to the readings.
-
-## Troubleshooting
-
-### ESP-IDF Instructions
-
-In a single terminal instance, run the following commands to set up and link the ESP-IDF and pyenv tools:
-
-```bash
-pyenv shell 3.12.9
-python3 --version # verify - should be 3.12.9
-which python3 # verify - should contain .pyenv/shims/python3
-cd ~/esp/esp-idf
-. ./export.sh
-
-idf.py --version # verify - should be v4.4.4 unless upgraded to 5.x.x
-cd /path/to/drone_flight_controller # replace with project path
-
-idf.py set-target esp32   # only needed once per project
+### Clone and Build
+```cmd
+git clone https://github.com/CherryWookie/EDNA_2.0
+cd EDNA_2.0
+idf.py set-target esp32
 idf.py build
+idf.py -p COM3 flash monitor
 ```
+Replace `COM3` with your actual port (check Device Manager → Ports with ESP32 plugged in).
 
-## PID
-
-For the PID integration, we initially came up with a system to average the different telemetry conditions in order to send our motos cohesive and accurate values. This involved having a motor PWM value for each individual motor for `Pitch` as well as `Roll`. From this, would have 2 PWM values for each motor. Our solution to end up with one single PWM value per motor was to average these values together. _(e.g. (M1roll + M1pitch)/2 etc...)_
-
-With these values, we could utilize our accelerometer/gyroscope data and send these values accordingly to our motors in hopes to self stabalize.
-
-```C++
-PID CODE
-```
-
-# Bluepad32 + ESP-IDF v6.0 Setup Guide
-### EDNA 2.0 — ESP32-WROOM-32D
- 
 ---
- 
-## Overview
- 
-Bluepad32 was not designed for ESP-IDF v6.0. Getting it to build requires:
-1. Correct repo cloning (with submodules)
-2. Running the BTstack integration script with the correct path
-3. Patching several `CMakeLists.txt` files for IDF v6.0's split driver components
-4. Excluding two source files that use removed/renamed APIs
- 
----
- 
-## Step 1 — Clone Bluepad32 with Submodules
- 
-> Do this instead of downloading the ZIP. The ZIP won't include BTstack.
- 
-```bash
+
+## Bluepad32 + ESP-IDF v6.0 Integration
+
+Bluepad32 v4.2.0 is not natively compatible with ESP-IDF v6.0. The following documents every patch required. All paths are relative to the project root `EDNA_2.0\` unless otherwise noted.
+
+### Step 1 — Clone Bluepad32 with Submodules
+> **Run from:** anywhere outside your project (e.g. `Documents\code\`)
+
+```cmd
 git clone --recursive https://github.com/ricardoquesada/bluepad32.git
 ```
- 
-The `--recursive` flag is critical — it pulls `external/btstack` which bluepad32 depends on.
- 
----
- 
-## Step 2 — Run integrate_btstack.py
- 
-> Navigate to: `bluepad32/external/btstack/port/esp32/`
- 
+
+Do **not** download as a ZIP — it won't include the `external/btstack` submodule that bluepad32 depends on.
+
+### Step 2 — Run integrate_btstack.py
+> **Run from:** `bluepad32\external\btstack\port\esp32\`
+
 ```cmd
 cd bluepad32\external\btstack\port\esp32
- 
 set IDF_PATH=..\..\..\..\src
 python integrate_btstack.py
 ```
- 
-**Why `IDF_PATH=../../../../src`?** This installs BTstack into `bluepad32/src/components/btstack/` — inside the bluepad32 tree — rather than into your system ESP-IDF. Without this override, the script pollutes your global IDF installation and the wrong btstack gets picked up at build time.
- 
-**After this step**, verify the output exists:
+
+`IDF_PATH=../../../../src` installs BTstack into `bluepad32/src/components/btstack/` (inside the bluepad32 tree) rather than your system ESP-IDF. Without this, it pollutes your global IDF and causes version conflicts.
+
+Verify it worked:
+```cmd
+dir bluepad32\src\components\btstack\CMakeLists.txt
 ```
-bluepad32\src\components\btstack\CMakeLists.txt  ← must exist
-```
- 
-**Reset IDF_PATH immediately after** — do not leave it set or subsequent `idf.py` commands will break:
+
+**Immediately reset IDF_PATH** or all subsequent `idf.py` commands will fail:
 ```cmd
 set IDF_PATH=C:\esp\v6.0\esp-idf
 C:\esp\v6.0\esp-idf\export.bat
 ```
- 
----
- 
-## Step 3 — Build the Example Project
- 
-> Navigate to: `bluepad32/examples/esp32/`
- 
+
+### Step 3 — Copy Components into Your Project
+> **Run from:** `EDNA_2.0\`
+
 ```cmd
-idf.py set-target esp32
-idf.py build
+xcopy /E /I "path\to\bluepad32\src\components\bluepad32"         "components\bluepad32_component"
+xcopy /E /I "path\to\bluepad32\src\components\btstack"           "components\btstack"
+xcopy /E /I "path\to\bluepad32\src\components\cmd_nvs"           "components\cmd_nvs"
+xcopy /E /I "path\to\bluepad32\src\components\cmd_system"        "components\cmd_system"
+xcopy /E /I "path\to\bluepad32\src\components\bluepad32\include" "components\bluepad32_component\include"
 ```
- 
-This will fail multiple times. Each failure requires a patch. After each patch:
- 
-```cmd
-idf.py fullclean
-idf.py set-target esp32
-idf.py build
-```
- 
-> **Note:** `fullclean` wipes `sdkconfig`, so `set-target` must be re-run after every fullclean.
- 
+
+The last line copies subfolders (`platform/`, `controller/`, `bt/`) that the first xcopy misses.
+
 ---
- 
-## Compatibility Issues & Fixes
- 
-### Issue 1 — btstack CMakeLists.txt missing IDF v6.0 driver components
- 
-**File:** `bluepad32\src\components\btstack\CMakeLists.txt`
- 
-**Error:**
-```
-fatal error: driver/gpio.h: No such file or directory
-fatal error: driver/uart.h: No such file or directory
-```
- 
-**Root cause:** ESP-IDF v6.0 split the monolithic `driver` component into discrete `esp_driver_*` components. BTstack's CMakeLists.txt only declared the old `driver` dependency.
- 
-**Fix:** Find the `set(priv_requires ...)` block and add the missing components:
- 
+
+### Required Patches
+
+IDF v6.0 split the monolithic `driver` component into discrete `esp_driver_*` sub-components, fully removed `driver/timer.h`, and made `esp_log`/`freertos` implicit dependencies. Apply all patches below.
+
+<details>
+<summary><strong>Patch 1 — components/btstack/CMakeLists.txt</strong></summary>
+
+**Error:** `fatal error: driver/gpio.h` / `driver/uart.h: No such file or directory`
+
+Find the `set(priv_requires ...)` block and add:
 ```cmake
 set(priv_requires
-    "nvs_flash"
-    "bt"
-    "driver"
-    "lwip"
-    "vfs"
-    "esp_driver_gpio"    # ← add
-    "esp_driver_uart"    # ← add
-    "esp_driver_i2s"     # ← add
+    "nvs_flash" "bt" "driver" "lwip" "vfs"
+    "esp_driver_gpio"
+    "esp_driver_uart"
+    "esp_driver_i2s"
 )
 ```
- 
----
- 
-### Issue 2 — cmd_system CMakeLists.txt missing uart component
- 
-**File:** `bluepad32\src\components\cmd_system\CMakeLists.txt`
- 
-**Error:**
-```
-fatal error: driver/uart.h: No such file or directory
-```
- 
-**Fix:** Add `esp_driver_uart` to the REQUIRES list:
- 
+</details>
+
+<details>
+<summary><strong>Patch 2 — components/cmd_system/CMakeLists.txt</strong></summary>
+
+**Error:** `fatal error: driver/uart.h: No such file or directory`
+
 ```cmake
 if("${IDF_VERSION_MAJOR}" GREATER_EQUAL 5)
 idf_component_register(SRCS "cmd_system.c"
-                    INCLUDE_DIRS .
-                    REQUIRES console spi_flash driver esp_driver_gpio esp_driver_uart)
+    INCLUDE_DIRS .
+    REQUIRES console spi_flash driver esp_driver_gpio esp_driver_uart)
 endif()
 ```
- 
----
- 
-### Issue 3 — bluepad32 CMakeLists.txt missing IDF v6.0 driver components
- 
-**File:** `bluepad32\src\components\bluepad32\CMakeLists.txt`
- 
-**Errors:**
-```
-fatal error: driver/ledc.h: No such file or directory
-fatal error: driver/spi_slave.h: No such file or directory
-fatal error: driver/timer.h: No such file or directory  ← fully removed in v6.0
-```
- 
-**Fix:** The `requires` variable in the `if(IDF_TARGET)` block already existed — update it:
- 
+</details>
+
+<details>
+<summary><strong>Patch 3 — components/bluepad32_component/CMakeLists.txt</strong></summary>
+
+**Errors:** `driver/ledc.h`, `driver/spi_slave.h`, `driver/timer.h` not found; `VSPI_HOST` undeclared
+
+**3a.** Update `requires` in the `if(IDF_TARGET)` block:
 ```cmake
 set(requires "nvs_flash" "btstack" "app_update" "esp_timer"
-    "esp_driver_ledc"     # ← add
-    "esp_driver_spi"      # ← add
-    "esp_driver_gptimer"  # ← add (replaces removed timer driver)
-    "esp_driver_gpio"     # ← add
-    "esp_driver_uart")    # ← add
+    "esp_driver_ledc"
+    "esp_driver_spi"
+    "esp_driver_gptimer"
+    "esp_driver_gpio"
+    "esp_driver_uart")
 ```
- 
----
- 
-### Issue 4 — uni_mouse_quadrature.c uses removed timer API
- 
-**File:** `bluepad32\src\components\bluepad32\CMakeLists.txt`
- 
-**Error:**
-```
-fatal error: driver/timer.h: No such file or directory
-HINT: The legacy timer group driver is removed. Replace with driver/gptimer.h
-```
- 
-**Root cause:** `driver/timer.h` was completely removed in IDF v6.0 (not just renamed). The file `uni_mouse_quadrature.c` uses this API extensively and would require significant rewriting. Since this file handles quadrature mouse encoding for Unijoysticle hardware — not needed for drone use — exclude it entirely.
- 
-**Fix:** In the `if(IDF_TARGET)` srcs block, remove `"uni_mouse_quadrature.c"`:
- 
+
+**3b.** Remove `uni_mouse_quadrature.c` from the `if(IDF_TARGET)` srcs block — uses the fully removed `driver/timer.h`, only needed for Unijoysticle hardware:
 ```cmake
 if(IDF_TARGET)
     list(APPEND srcs
@@ -361,78 +216,234 @@ if(IDF_TARGET)
          "arch/uni_log_esp32.c"
          "arch/uni_property_esp32.c"
          "uni_gpio.c")
-         # "uni_mouse_quadrature.c"  ← removed
+endif()
 ```
- 
----
- 
-### Issue 5 — uni_platform_nina.c uses renamed SPI constant
- 
-**File:** `bluepad32\src\components\bluepad32\CMakeLists.txt`
- 
-**Error:**
-```
-error: 'VSPI_HOST' undeclared; did you mean 'SPI3_HOST'?
-```
- 
-**Root cause:** `VSPI_HOST` was renamed to `SPI3_HOST` in IDF v5+. This file handles the NINA SPI platform (Arduino Nano IoT / AirLift boards) — not needed for ESP32-WROOM-32D drone use.
- 
-**Fix:** In the `if(CONFIG_IDF_TARGET_ESP32)` srcs block, remove `"platform/uni_platform_nina.c"`:
- 
+
+**3c.** Strip the `if(CONFIG_IDF_TARGET_ESP32)` block. Remove `uni_platform_nina.c` (uses renamed `VSPI_HOST`) and all `uni_platform_unijoysticle*.c` files. Do **not** use `#` comments inside CMake `list()` calls — delete the lines entirely:
 ```cmake
 if(CONFIG_IDF_TARGET_ESP32)
     list(APPEND srcs
-         "platform/uni_platform_mightymiggy.c"
-         # "platform/uni_platform_nina.c"  ← removed
-         "platform/uni_platform_unijoysticle.c"
-         ...
+        "platform/uni_platform_mightymiggy.c")
+endif()
 ```
- 
----
- 
-### Issue 6 — Linker error: undefined reference to uni_mouse_quadrature_*
- 
-**File:** `bluepad32\src\components\bluepad32\arch\uni_console_esp32.c`
- 
-**Error:**
-```
-undefined reference to `uni_mouse_quadrature_get_scale_factor'
-undefined reference to `uni_mouse_quadrature_set_scale_factor'
-```
- 
-**Root cause:** `uni_console_esp32.c` calls functions from `uni_mouse_quadrature.c`, which we excluded. The compiled object file exists but the symbols are now missing at link time.
- 
-**Fix:** Find the `mouse_scale` function in `uni_console_esp32.c` (~line 113) and stub out its body:
- 
+</details>
+
+<details>
+<summary><strong>Patch 4 — components/bluepad32_component/arch/uni_console_esp32.c</strong></summary>
+
+**Error:** `undefined reference to uni_mouse_quadrature_get_scale_factor`
+
+Find the `mouse_scale` function (~line 113) and replace its body:
 ```c
 static int mouse_scale(int argc, char** argv) {
     logi("Mouse quadrature not supported in this build\n");
     return 0;
 }
 ```
- 
-> After this fix, only `idf.py build` is needed — no fullclean required since it's a linker error, not a CMake change.
- 
+</details>
+
+<details>
+<summary><strong>Patch 5 — components/bluepad32_component/platform/uni_platform.c</strong></summary>
+
+**Error:** `undefined reference to uni_platform_unijoysticle_create`
+
+Replace the entire `#ifdef` chain inside `uni_platform_init` with the custom platform path hardcoded:
+```c
+void uni_platform_init(int argc, const char** argv) {
+    // Hardcoded to custom platform — uni_platform_set_custom() must be
+    // called before uni_init().
+    if (!platform_) {
+        while (1)
+            loge("Error: call uni_platform_set_custom() before calling uni_main\n");
+    }
+    logi("Platform: %s\n", platform_->name);
+    platform_->init(argc, argv);
+}
+```
+</details>
+
+<details>
+<summary><strong>Patch 6 — Your Own Components</strong></summary>
+
+**Remove `esp_log` and `freertos` from all `REQUIRES` lists** — they are implicit in IDF v6.0 and cause "unknown component" errors if declared.
+
+**`MACSTR` macro** — can no longer be used in string literal concatenation. Replace:
+```c
+ESP_LOGI(TAG, "MAC: " MACSTR, MAC2STR(e->mac));
+```
+With:
+```c
+#include "esp_mac.h"
+ESP_LOGI(TAG, "MAC: %02x:%02x:%02x:%02x:%02x:%02x", MAC2STR(e->mac));
+```
+
+**Backslash in `//` comments** — `-Werror=comment` treats lines ending in `\` as errors. Add a space before any trailing backslash in ASCII art comments.
+
+**`esp_timer_get_time()`** — add `#include "esp_timer.h"` if used.
+</details>
+
 ---
- 
-## IDF v6.0 Driver Split — Quick Reference
- 
-| Old header (broken) | New component to add to REQUIRES |
+
+### Bluepad32 v4.2.0 API
+
+This version does not have `bluepad32.h`. Use `uni.h` instead. The platform struct is `struct uni_platform` (not a typedef). The data callback must use `uni_controller_t*` assigned to `.on_controller_data`:
+
+<details>
+<summary><strong>controller.c integration example</strong></summary>
+
+```c
+#include "uni.h"
+#include "uni_init.h"
+#include "platform/uni_platform.h"
+#include "platform/uni_platform_custom.h"
+#include "controller/uni_gamepad.h"
+
+static void on_controller_data(uni_hid_device_t *d, uni_controller_t *ctl) {
+    uni_gamepad_t *gp = &ctl->gamepad;
+    // gp->axis_x, gp->axis_y   — left stick  (-512 to 511)
+    // gp->axis_rx, gp->axis_ry — right stick (-512 to 511)
+    // gp->throttle              — left trigger (0–1023)
+}
+
+static struct uni_platform s_platform = {
+    .name                   = "ESP32Drone",
+    .init                   = NULL,
+    .on_init_complete       = NULL,
+    .on_device_discovered   = NULL,
+    .on_device_connected    = on_connected,
+    .on_device_disconnected = on_disconnected,
+    .on_device_ready        = NULL,
+    .on_gamepad_data        = NULL,
+    .on_controller_data     = on_controller_data,
+    .get_property           = NULL,
+    .on_oob_event           = NULL,
+    .device_dump            = NULL,
+    .register_console_cmds  = NULL,
+};
+
+void controller_init(void) {
+    uni_platform_set_custom(&s_platform);
+    uni_init(0, NULL);
+}
+```
+</details>
+
+---
+
+### Configuration Files
+
+#### `sdkconfig.defaults` — create in project root
+```
+CONFIG_BLUEPAD32_PLATFORM_CUSTOM=y
+CONFIG_BT_ENABLED=y
+CONFIG_BT_CLASSIC_ENABLED=y
+CONFIG_BT_BLUEDROID_ENABLED=n
+CONFIG_FREERTOS_HZ=1000
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+```
+
+`CONFIG_BLUEPAD32_PLATFORM_CUSTOM=y` is essential — without it the linker will fail looking for `uni_platform_unijoysticle_create`.
+
+#### `partitions.csv` — create in project root
+The bluepad32 binary exceeds the default 1MB factory partition:
+```csv
+# Name,   Type, SubType, Offset,   Size,  Flags
+nvs,      data, nvs,     0x9000,   24K,
+phy_init, data, phy,     0xf000,   4K,
+factory,  app,  factory, 0x10000,  1500K,
+coredump, data, coredump,,         64K,
+```
+
+---
+
+### IDF v6.0 Driver Split — Quick Reference
+
+| Old header | New `REQUIRES` entry |
 |---|---|
 | `driver/gpio.h` | `esp_driver_gpio` |
 | `driver/uart.h` | `esp_driver_uart` |
 | `driver/i2s.h` | `esp_driver_i2s` |
-| `driver/spi_master.h` / `spi_slave.h` | `esp_driver_spi` |
 | `driver/ledc.h` | `esp_driver_ledc` |
+| `driver/spi_master.h` / `spi_slave.h` | `esp_driver_spi` |
 | `driver/i2c.h` | `esp_driver_i2c` *(EOL in v6.0, removed in v7.0)* |
-| `driver/timer.h` | **Fully removed** — use `driver/gptimer.h` + `esp_driver_gptimer` |
- 
+| `driver/timer.h` | **Fully removed** — migrate to `driver/gptimer.h` + `esp_driver_gptimer` |
+
+<details>
+<summary><strong>Warnings you can safely ignore</strong></summary>
+
+- CMake warnings about lwip files "being built by btstack" — harmless
+- `es8388.c` deprecation warning about `driver/i2c.h` EOL — harmless until IDF v7.0
+- `esp_sleep_get_wakeup_cause` deprecated warning in `cmd_system.c` — harmless
+</details>
+
 ---
- 
-## Environment Notes
- 
-- Always run `export.bat` at the start of every new terminal session before using `idf.py`
-- Never leave a manually set `IDF_PATH` in your environment after running `integrate_btstack.py`
-- `idf.py fullclean` wipes `sdkconfig` — always follow it with `idf.py set-target esp32`
-- The CMake warnings about lwip source files belonging to btstack are **harmless warnings**, not errors — ignore them
-- The I2C deprecation warning from `es8388.c` is also harmless for now — it becomes fatal in IDF v7.0
+
+## Connectivity
+
+The project uses Ricardo Quesada's Bluepad32 library for Bluetooth gamepad input, supporting PS4, PS5, Xbox, Switch Pro, and most other modern controllers. WiFi is established as an AP so the MBL Quadcopter Telemetry Console (in `pythonscripts/`) can connect to manipulate PID constants and observe telemetry. The ESP32 acts as a UDP server on network `esp32drone`.
+
+---
+
+## ESC Calibration
+
+*Steps may vary by ESC model.*
+
+1. Power the ESP32 only (no battery) while sending 2000µs PWM (max throttle)
+2. Plug in the battery. A series of beeps should follow
+3. While the ESC is powered, send 1000µs PWM (min throttle). A different series of beeps follows
+4. Unplug the battery. Calibration complete
+
+A successful calibration results in a single synchronized 3-beep series on power-up instead of varying patterns.
+
+<details>
+<summary>Failed Attempts</summary>
+
+The lobodol ESC-Calibration library kept returning `Timed out waiting for packet header` on the ESP32 in both Arduino IDE and VSCode. We ended up using an Arduino UNO to perform initial calibration. When testing all four motors simultaneously with Arduino, at least one motor remained motionless. Switching back to the ESP32 with our own code resolved this — all four motors worked simultaneously without issue.
+
+</details>
+
+---
+
+## Troubleshooting
+
+### Build Commands
+> **Run from:** `EDNA_2.0\` (project root)
+
+```cmd
+:: Source IDF — run every new terminal
+C:\esp\v6.0\esp-idf\export.bat
+
+:: First build or after fullclean
+idf.py set-target esp32
+idf.py build
+
+:: Flash and monitor
+idf.py -p COM3 flash monitor
+
+:: If fullclean refuses due to non-CMake build directory
+rmdir /s /q C:\Users\Jarvis\Documents\code\EDNA_2.0\build
+idf.py set-target esp32
+idf.py build
+```
+
+> `idf.py fullclean` wipes `sdkconfig` — always follow it with `idf.py set-target esp32`.
+
+### On First Boot
+Watch the serial monitor for:
+```
+Bluepad32 initialized — waiting for gamepad connection
+ESCs armed
+WiFi + telemetry OK
+All tasks started
+```
+Put your gamepad in pairing mode and confirm `Gamepad connected` appears before testing motor response.
+
+---
+
+## PID
+
+The PID system averages per-motor pitch and roll PWM values to produce a single PWM output per motor: `(M1_roll + M1_pitch) / 2`. The MPU-6050 provides pitch, roll, and yaw rate via a Kalman filter. The flight controller runs at 100Hz on Core 1, with a hard safety cutoff that kills all motors if attitude exceeds `ANGLE_LIMIT_DEG`.
+
+Tuning is done live via the telemetry console over WiFi — connect to `esp32drone` and run `MBL_QTC.py` from the `pythonscripts/` folder. Requires Python `tkinter`.

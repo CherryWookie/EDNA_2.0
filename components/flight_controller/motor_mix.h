@@ -11,10 +11,7 @@
 //
 //      FRONT
 //   FL (CW)   FR (CCW)
-//      \   /
-//       \ /
-//       / \
-//      /   \
+
 //   RL (CCW)  RR (CW)
 //
 // Mixing table:

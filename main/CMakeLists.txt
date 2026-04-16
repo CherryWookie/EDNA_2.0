@@ -11,4 +11,5 @@ idf_component_register(
         esp_wifi
         freertos
         esp_timer
+        bluepad32_component
 )

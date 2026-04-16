@@ -19,7 +19,13 @@
 #include <math.h>
 
 // Bluepad32 public header — provided by Libraries/bluepad32
-#include "bluepad32.h"
+#include "uni.h"
+#include "uni_init.h"
+#include "platform/uni_platform.h"
+#include "platform/uni_platform_custom.h"
+#include "controller/uni_gamepad.h"
+#include "uni_hid_device.h"
+
 
 static const char *TAG = "CTRL";
 static int s_connected = 0;
@@ -85,16 +91,19 @@ static void on_disconnected(uni_hid_device_t *d) {
     }
 }
 
-static void on_gamepad_data(uni_hid_device_t *d, uni_gamepad_t *gp) {
+// static void on_gamepad_data(uni_hid_device_t *d, uni_gamepad_t *gp) {
+
+static void on_gamepad_data(uni_hid_device_t *d, uni_controller_t *ctl) {
+    uni_gamepad_t *gp = &ctl->gamepad;   
     // Axis mapping:
     //   axis[0] = left  stick X  → yaw
     //   axis[1] = left  stick Y  → throttle (inverted)
     //   axis[2] = right stick X  → roll
     //   axis[3] = right stick Y  → pitch (inverted: up = nose up = positive)
-    int thr   = normalize_throttle(gp->axis[1]);
-    float pit = normalize_angle(-gp->axis[3]);  // negate: stick up = nose up
-    float rol = normalize_angle(gp->axis[2]);
-    float yaw = normalize_yaw(gp->axis[0]);
+    int thr   = normalize_throttle(gp->axis_y);
+    float pit = normalize_angle(-gp->axis_ry);  // negate: stick up = nose up
+    float rol = normalize_angle(gp->axis_rx);
+    float yaw = normalize_yaw(gp->axis_x);
 
     if (xSemaphoreTake(setpoint_mutex, 0) == pdTRUE) {
         g_throttle = thr;
@@ -110,19 +119,34 @@ static void on_gamepad_data(uni_hid_device_t *d, uni_gamepad_t *gp) {
 #endif
 }
 
-static uni_platform_t s_platform = {
-    .name            = "ESP32Drone",
-    .on_init_complete = NULL,
+// static struct uni_platform s_platform = {
+//     .name            = "ESP32Drone",
+//     .on_init_complete = NULL,
+//     .on_device_connected    = on_connected,
+//     .on_device_disconnected = on_disconnected,
+//     .on_gamepad_data        = on_gamepad_data,
+// };
+
+static struct uni_platform s_platform = {
+    .name                   = "ESP32Drone",
+    .init                   = NULL,
+    .on_init_complete       = NULL,
+    .on_device_discovered   = NULL,
     .on_device_connected    = on_connected,
     .on_device_disconnected = on_disconnected,
-    .on_gamepad_data        = on_gamepad_data,
+    .on_device_ready        = NULL,
+    .on_controller_data     = on_gamepad_data,
+    .on_gamepad_data        = NULL,
+    .get_property           = NULL,
+    .on_oob_event           = NULL,
+    .device_dump            = NULL,
+    .register_console_cmds  = NULL,
 };
-
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 void controller_init(void) {
-    uni_platform_set(&s_platform);
+    uni_platform_set_custom(&s_platform);
     uni_init(0, NULL);
     ESP_LOGI(TAG, "Bluepad32 initialized — waiting for gamepad connection");
 }

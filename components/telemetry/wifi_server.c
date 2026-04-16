@@ -11,6 +11,7 @@
 #include "lwip/sockets.h"
 #include "lwip/netdb.h"
 #include <string.h>
+#include "esp_mac.h"
 
 static const char *TAG = "WIFI";
 
@@ -22,10 +23,12 @@ static void wifi_event_handler(void *arg, esp_event_base_t base,
                                 int32_t id, void *data) {
     if (base == WIFI_EVENT && id == WIFI_EVENT_AP_STACONNECTED) {
         wifi_event_ap_staconnected_t *e = (wifi_event_ap_staconnected_t *)data;
-        ESP_LOGI(TAG, "Client connected, MAC: " MACSTR, MAC2STR(e->mac));
+        ESP_LOGI(TAG, "Client connected, MAC: %02x:%02x:%02x:%02x:%02x:%02x",
+         MAC2STR(e->mac));
     } else if (base == WIFI_EVENT && id == WIFI_EVENT_AP_STADISCONNECTED) {
         wifi_event_ap_stadisconnected_t *e = (wifi_event_ap_stadisconnected_t *)data;
-        ESP_LOGI(TAG, "Client disconnected, MAC: " MACSTR, MAC2STR(e->mac));
+        ESP_LOGI(TAG, "Client disconnected, MAC: %02x:%02x:%02x:%02x:%02x:%02x",
+         MAC2STR(e->mac));
         s_client_known = false;
     }
 }

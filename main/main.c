@@ -26,16 +26,9 @@
 #include "controller.h"
 #include "wifi_server.h"
 #include "telemetry.h"
+#include "esp_timer.h"
 
 
-void app_main(void)
-{
-    printf("EDNA started!\n");
-
-    while (1) {
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-}
 
 static const char *TAG = "MAIN";
 
