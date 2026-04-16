@@ -111,9 +111,6 @@ Several commands need to be run in order to setup the ESP-IDF environment to be 
 ```bash
 # from root project dir
 
-# init pyenv
-pyenv shell 3.12.9
-
 # expose idf.py
 cd %USERPROFILE%/esp/v6.0/esp-idf/export.bat
 call export.bat
