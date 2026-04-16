@@ -12,4 +12,5 @@ idf_component_register(
         freertos
         esp_timer
         bluepad32_component
+        btstack
 )

@@ -17,6 +17,9 @@
 #include "freertos/semphr.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
+#include "btstack_port_esp32.h"
+#include "btstack_run_loop.h"
+
 
 #include "config.h"
 #include "mpu6050.h"
@@ -170,6 +173,7 @@ void app_main(void) {
     esc_arm();
     ESP_LOGI(TAG, "ESCs armed");
 
+    btstack_init(); 
     controller_init();
     ESP_LOGI(TAG, "Bluepad32 controller init OK");
 
@@ -184,4 +188,6 @@ void app_main(void) {
     xTaskCreatePinnedToCore(telemetry_task,   "telemetry",  4096, NULL, 2, NULL, 0);
 
     ESP_LOGI(TAG, "All tasks started");
+
+    btstack_run_loop_execute();
 }

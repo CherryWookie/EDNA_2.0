@@ -119,6 +119,27 @@ static void on_gamepad_data(uni_hid_device_t *d, uni_controller_t *ctl) {
 #endif
 }
 
+// BEGIN - Added to make sure bluepad32 doesn't keep rebooting
+static void platform_init(int argc, const char** argv) {
+    (void)argc;
+    (void)argv;
+}
+
+static void platform_on_init_complete(void) {
+    uni_bt_enable_new_connections_unsafe(true);
+}
+
+static uni_error_t platform_on_device_ready(uni_hid_device_t* d) {
+    (void)d;
+    return UNI_ERROR_SUCCESS;
+}
+
+static void platform_on_oob_event(uni_platform_oob_event_t event, void* data) {
+    (void)event;
+    (void)data;
+}
+// END
+
 // static struct uni_platform s_platform = {
 //     .name            = "ESP32Drone",
 //     .on_init_complete = NULL,
@@ -129,16 +150,16 @@ static void on_gamepad_data(uni_hid_device_t *d, uni_controller_t *ctl) {
 
 static struct uni_platform s_platform = {
     .name                   = "ESP32Drone",
-    .init                   = NULL,
-    .on_init_complete       = NULL,
+    .init                   = platform_init,
+    .on_init_complete       = platform_on_init_complete,
     .on_device_discovered   = NULL,
     .on_device_connected    = on_connected,
     .on_device_disconnected = on_disconnected,
-    .on_device_ready        = NULL,
+    .on_device_ready        = platform_on_device_ready,
     .on_controller_data     = on_gamepad_data,
     .on_gamepad_data        = NULL,
     .get_property           = NULL,
-    .on_oob_event           = NULL,
+    .on_oob_event           = platform_on_oob_event,
     .device_dump            = NULL,
     .register_console_cmds  = NULL,
 };

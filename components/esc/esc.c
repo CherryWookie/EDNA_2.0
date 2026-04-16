@@ -67,7 +67,16 @@ void esc_arm(void) {
 }
 
 void esc_set_us(int motor, uint32_t pulse_us) {
+    static uint32_t last_us[MOTOR_COUNT] = {0};
+
     if (motor < 0 || motor >= MOTOR_COUNT) return;
+
+    if (pulse_us < ESC_PWM_MIN_US) pulse_us = ESC_PWM_MIN_US;
+    if (pulse_us > ESC_PWM_MAX_US) pulse_us = ESC_PWM_MAX_US;
+
+    if (last_us[motor] == pulse_us) return;
+    last_us[motor] = pulse_us;
+
     uint32_t duty = us_to_duty(pulse_us);
     ledc_set_duty(ESC_LEDC_MODE, motor_channels[motor], duty);
     ledc_update_duty(ESC_LEDC_MODE, motor_channels[motor]);
