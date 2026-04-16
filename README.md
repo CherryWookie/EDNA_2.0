@@ -169,7 +169,7 @@ In a single terminal instance, run the following commands to set up and link the
 pyenv shell 3.12.9
 python3 --version # verify - should be 3.12.9
 which python3 # verify - should contain .pyenv/shims/python3
-cd ~/esp/esp-idf
+cd ~/esp/esp-idf-v6.0 # macOS
 . ./export.sh
 
 idf.py --version # verify - should be v4.4.4 unless upgraded to 5.x.x
@@ -190,95 +190,107 @@ PID CODE
 ```
 
 # Bluepad32 + ESP-IDF v6.0 Setup Guide
+
 ### EDNA 2.0 — ESP32-WROOM-32D
- 
+
 ---
- 
+
 ## Overview
- 
+
 Bluepad32 was not designed for ESP-IDF v6.0. Getting it to build requires:
+
 1. Correct repo cloning (with submodules)
 2. Running the BTstack integration script with the correct path
 3. Patching several `CMakeLists.txt` files for IDF v6.0's split driver components
 4. Excluding two source files that use removed/renamed APIs
- 
+
 ---
- 
+
 ## Step 1 — Clone Bluepad32 with Submodules
- 
+
 > Do this instead of downloading the ZIP. The ZIP won't include BTstack.
- 
+
 ```bash
 git clone --recursive https://github.com/ricardoquesada/bluepad32.git
 ```
- 
+
 The `--recursive` flag is critical — it pulls `external/btstack` which bluepad32 depends on.
- 
+
 ---
- 
+
 ## Step 2 — Run integrate_btstack.py
- 
+
 > Navigate to: `bluepad32/external/btstack/port/esp32/`
- 
+
 ```cmd
 cd bluepad32\external\btstack\port\esp32
- 
-set IDF_PATH=..\..\..\..\src
+
+# One of the following
+set IDF_PATH=..\..\..\..\src # Windows
+export IDF_PATH=../../../../src # macOS / Linux
+
 python integrate_btstack.py
 ```
- 
+
 **Why `IDF_PATH=../../../../src`?** This installs BTstack into `bluepad32/src/components/btstack/` — inside the bluepad32 tree — rather than into your system ESP-IDF. Without this override, the script pollutes your global IDF installation and the wrong btstack gets picked up at build time.
- 
+
 **After this step**, verify the output exists:
+
 ```
 bluepad32\src\components\btstack\CMakeLists.txt  ← must exist
 ```
- 
+
 **Reset IDF_PATH immediately after** — do not leave it set or subsequent `idf.py` commands will break:
-```cmd
-set IDF_PATH=C:\esp\v6.0\esp-idf
-C:\esp\v6.0\esp-idf\export.bat
+
+```bash
+set IDF_PATH=C:\esp\v6.0\esp-idf # Windows
+export IDF_PATH=$HOME/esp/v6.0/esp-idf # macOS
+
+C:\esp\v6.0\esp-idf\export.bat # Windows
+source $HOME/esp/v6.0/esp-idf/export.sh # macOS
+
 ```
- 
+
 ---
- 
+
 ## Step 3 — Build the Example Project
- 
+
 > Navigate to: `bluepad32/examples/esp32/`
- 
-```cmd
+
+```bash
 idf.py set-target esp32
 idf.py build
 ```
- 
+
 This will fail multiple times. Each failure requires a patch. After each patch:
- 
-```cmd
+
+```bash
 idf.py fullclean
 idf.py set-target esp32
 idf.py build
 ```
- 
+
 > **Note:** `fullclean` wipes `sdkconfig`, so `set-target` must be re-run after every fullclean.
- 
+
 ---
- 
+
 ## Compatibility Issues & Fixes
- 
+
 ### Issue 1 — btstack CMakeLists.txt missing IDF v6.0 driver components
- 
+
 **File:** `bluepad32\src\components\btstack\CMakeLists.txt`
- 
+
 **Error:**
+
 ```
 fatal error: driver/gpio.h: No such file or directory
 fatal error: driver/uart.h: No such file or directory
 ```
- 
+
 **Root cause:** ESP-IDF v6.0 split the monolithic `driver` component into discrete `esp_driver_*` components. BTstack's CMakeLists.txt only declared the old `driver` dependency.
- 
+
 **Fix:** Find the `set(priv_requires ...)` block and add the missing components:
- 
+
 ```cmake
 set(priv_requires
     "nvs_flash"
@@ -291,20 +303,21 @@ set(priv_requires
     "esp_driver_i2s"     # ← add
 )
 ```
- 
+
 ---
- 
+
 ### Issue 2 — cmd_system CMakeLists.txt missing uart component
- 
+
 **File:** `bluepad32\src\components\cmd_system\CMakeLists.txt`
- 
+
 **Error:**
+
 ```
 fatal error: driver/uart.h: No such file or directory
 ```
- 
+
 **Fix:** Add `esp_driver_uart` to the REQUIRES list:
- 
+
 ```cmake
 if("${IDF_VERSION_MAJOR}" GREATER_EQUAL 5)
 idf_component_register(SRCS "cmd_system.c"
@@ -312,22 +325,23 @@ idf_component_register(SRCS "cmd_system.c"
                     REQUIRES console spi_flash driver esp_driver_gpio esp_driver_uart)
 endif()
 ```
- 
+
 ---
- 
+
 ### Issue 3 — bluepad32 CMakeLists.txt missing IDF v6.0 driver components
- 
+
 **File:** `bluepad32\src\components\bluepad32\CMakeLists.txt`
- 
+
 **Errors:**
+
 ```
 fatal error: driver/ledc.h: No such file or directory
 fatal error: driver/spi_slave.h: No such file or directory
 fatal error: driver/timer.h: No such file or directory  ← fully removed in v6.0
 ```
- 
+
 **Fix:** The `requires` variable in the `if(IDF_TARGET)` block already existed — update it:
- 
+
 ```cmake
 set(requires "nvs_flash" "btstack" "app_update" "esp_timer"
     "esp_driver_ledc"     # ← add
@@ -336,23 +350,24 @@ set(requires "nvs_flash" "btstack" "app_update" "esp_timer"
     "esp_driver_gpio"     # ← add
     "esp_driver_uart")    # ← add
 ```
- 
+
 ---
- 
+
 ### Issue 4 — uni_mouse_quadrature.c uses removed timer API
- 
+
 **File:** `bluepad32\src\components\bluepad32\CMakeLists.txt`
- 
+
 **Error:**
+
 ```
 fatal error: driver/timer.h: No such file or directory
 HINT: The legacy timer group driver is removed. Replace with driver/gptimer.h
 ```
- 
+
 **Root cause:** `driver/timer.h` was completely removed in IDF v6.0 (not just renamed). The file `uni_mouse_quadrature.c` uses this API extensively and would require significant rewriting. Since this file handles quadrature mouse encoding for Unijoysticle hardware — not needed for drone use — exclude it entirely.
- 
+
 **Fix:** In the `if(IDF_TARGET)` srcs block, remove `"uni_mouse_quadrature.c"`:
- 
+
 ```cmake
 if(IDF_TARGET)
     list(APPEND srcs
@@ -363,22 +378,23 @@ if(IDF_TARGET)
          "uni_gpio.c")
          # "uni_mouse_quadrature.c"  ← removed
 ```
- 
+
 ---
- 
+
 ### Issue 5 — uni_platform_nina.c uses renamed SPI constant
- 
+
 **File:** `bluepad32\src\components\bluepad32\CMakeLists.txt`
- 
+
 **Error:**
+
 ```
 error: 'VSPI_HOST' undeclared; did you mean 'SPI3_HOST'?
 ```
- 
+
 **Root cause:** `VSPI_HOST` was renamed to `SPI3_HOST` in IDF v5+. This file handles the NINA SPI platform (Arduino Nano IoT / AirLift boards) — not needed for ESP32-WROOM-32D drone use.
- 
+
 **Fix:** In the `if(CONFIG_IDF_TARGET_ESP32)` srcs block, remove `"platform/uni_platform_nina.c"`:
- 
+
 ```cmake
 if(CONFIG_IDF_TARGET_ESP32)
     list(APPEND srcs
@@ -387,50 +403,51 @@ if(CONFIG_IDF_TARGET_ESP32)
          "platform/uni_platform_unijoysticle.c"
          ...
 ```
- 
+
 ---
- 
-### Issue 6 — Linker error: undefined reference to uni_mouse_quadrature_*
- 
+
+### Issue 6 — Linker error: undefined reference to uni*mouse_quadrature*\*
+
 **File:** `bluepad32\src\components\bluepad32\arch\uni_console_esp32.c`
- 
+
 **Error:**
+
 ```
 undefined reference to `uni_mouse_quadrature_get_scale_factor'
 undefined reference to `uni_mouse_quadrature_set_scale_factor'
 ```
- 
+
 **Root cause:** `uni_console_esp32.c` calls functions from `uni_mouse_quadrature.c`, which we excluded. The compiled object file exists but the symbols are now missing at link time.
- 
+
 **Fix:** Find the `mouse_scale` function in `uni_console_esp32.c` (~line 113) and stub out its body:
- 
+
 ```c
 static int mouse_scale(int argc, char** argv) {
     logi("Mouse quadrature not supported in this build\n");
     return 0;
 }
 ```
- 
+
 > After this fix, only `idf.py build` is needed — no fullclean required since it's a linker error, not a CMake change.
- 
+
 ---
- 
+
 ## IDF v6.0 Driver Split — Quick Reference
- 
-| Old header (broken) | New component to add to REQUIRES |
-|---|---|
-| `driver/gpio.h` | `esp_driver_gpio` |
-| `driver/uart.h` | `esp_driver_uart` |
-| `driver/i2s.h` | `esp_driver_i2s` |
-| `driver/spi_master.h` / `spi_slave.h` | `esp_driver_spi` |
-| `driver/ledc.h` | `esp_driver_ledc` |
-| `driver/i2c.h` | `esp_driver_i2c` *(EOL in v6.0, removed in v7.0)* |
-| `driver/timer.h` | **Fully removed** — use `driver/gptimer.h` + `esp_driver_gptimer` |
- 
+
+| Old header (broken)                   | New component to add to REQUIRES                                  |
+| ------------------------------------- | ----------------------------------------------------------------- |
+| `driver/gpio.h`                       | `esp_driver_gpio`                                                 |
+| `driver/uart.h`                       | `esp_driver_uart`                                                 |
+| `driver/i2s.h`                        | `esp_driver_i2s`                                                  |
+| `driver/spi_master.h` / `spi_slave.h` | `esp_driver_spi`                                                  |
+| `driver/ledc.h`                       | `esp_driver_ledc`                                                 |
+| `driver/i2c.h`                        | `esp_driver_i2c` _(EOL in v6.0, removed in v7.0)_                 |
+| `driver/timer.h`                      | **Fully removed** — use `driver/gptimer.h` + `esp_driver_gptimer` |
+
 ---
- 
+
 ## Environment Notes
- 
+
 - Always run `export.bat` at the start of every new terminal session before using `idf.py`
 - Never leave a manually set `IDF_PATH` in your environment after running `integrate_btstack.py`
 - `idf.py fullclean` wipes `sdkconfig` — always follow it with `idf.py set-target esp32`
