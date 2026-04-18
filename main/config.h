@@ -28,7 +28,7 @@
 #define ESC_PWM_FREQ_HZ 50      // Standard 50 Hz PWM for 
 
 // Accumulative throttle tuning
-#define THROTTLE_ACCEL_MAX_US_PER_CALL  20   // max µs change per callback at full stick
+#define THROTTLE_ACCEL_MAX_US_PER_CALL  3   // max µs change per callback at full stick
 #define THROTTLE_ACCEL_MIN_US_PER_CALL  1    // min µs change per callback at slight deflection 
 
 // LEDC timer and channel assignments (one channel per motor)
