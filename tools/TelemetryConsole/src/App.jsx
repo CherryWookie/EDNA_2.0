@@ -21,28 +21,14 @@ function App() {
   const telemetry = useTelemetry();
   const lastToastedError = useRef("");
   const [pidDrafts, setPidDrafts] = useState(defaultPid);
+  const [pidDraftsInitialized, setPidDraftsInitialized] = useState(false);
 
   useEffect(() => {
-    if (telemetry.latest) {
-      setPidDrafts({
-        pitch: {
-          kp: telemetry.latest.kp_pitch,
-          ki: telemetry.latest.ki_pitch,
-          kd: telemetry.latest.kd_pitch,
-        },
-        roll: {
-          kp: telemetry.latest.kp_roll,
-          ki: telemetry.latest.ki_roll,
-          kd: telemetry.latest.kd_roll,
-        },
-        yaw: {
-          kp: telemetry.latest.kp_yaw,
-          ki: telemetry.latest.ki_yaw,
-          kd: telemetry.latest.kd_yaw,
-        },
-      });
-    }
-  }, [telemetry.latest]);
+    if (!telemetry.latest || pidDraftsInitialized) return;
+
+    setPidDrafts(pidDraftsFromPacket(telemetry.latest));
+    setPidDraftsInitialized(true);
+  }, [pidDraftsInitialized, telemetry.latest]);
 
   useEffect(() => {
     if (!telemetry.error || telemetry.error === lastToastedError.current) return;
@@ -117,6 +103,26 @@ function App() {
       </section>
     </main>
   );
+}
+
+function pidDraftsFromPacket(packet) {
+  return {
+    pitch: {
+      kp: packet.kp_pitch,
+      ki: packet.ki_pitch,
+      kd: packet.kd_pitch,
+    },
+    roll: {
+      kp: packet.kp_roll,
+      ki: packet.ki_roll,
+      kd: packet.kd_roll,
+    },
+    yaw: {
+      kp: packet.kp_yaw,
+      ki: packet.ki_yaw,
+      kd: packet.kd_yaw,
+    },
+  };
 }
 
 export default App;
