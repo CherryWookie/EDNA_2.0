@@ -7,7 +7,7 @@ Requirements:
     pip install tkinter matplotlib
 
 Usage:
-    1. Connect your laptop to the "esp32drone" WiFi network.
+    1. Connect your laptop to the "EDNA_2.0" WiFi network.
     2. Run:  python MBL_QTC.py
     3. Click "Connect" to start receiving data.
     4. Adjust PID sliders and click "Send Gains" to hot-update the drone.
@@ -20,10 +20,21 @@ Layout:
 """
 
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import messagebox
+import ttkbootstrap as ttk
+import sys
 import threading
 import time
 from collections import deque
+
+FONTS = {
+    "normal": ("Helvetica", 14),
+    "small": ("Menlo", 12),
+    "header": ("Helvetica", 20, "bold"),
+    "subheader": ("Menlo", 16, "bold"),
+    "bold": ("Helvetica", 14, "bold"),
+
+}
 
 try:
     import matplotlib
@@ -93,35 +104,34 @@ class QTCApp:
     # -----------------------------------------------------------------------
     def _build_ui(self):
         # Top toolbar
-        toolbar = tk.Frame(self.root, pady=4)
+        toolbar = ttk.Frame(self.root, padding=(0, 4))
         toolbar.pack(side=tk.TOP, fill=tk.X, padx=8)
 
-        self.btn_connect = tk.Button(toolbar, text="Connect",
-                                     command=self._toggle_connect,
-                                     width=10, bg="#4CAF50", fg="white")
+        self.btn_connect = ttk.Button(toolbar, text="Connect",
+                                      command=self._toggle_connect,
+                                      width=10)
         self.btn_connect.pack(side=tk.LEFT, padx=4)
 
-        self.lbl_status = tk.Label(toolbar, text="Disconnected",
-                                   fg="gray", font=("Courier", 10))
+        self.lbl_status = ttk.Label(toolbar, text="Disconnected")
         self.lbl_status.pack(side=tk.LEFT, padx=8)
 
-        self.lbl_rate = tk.Label(toolbar, text="0 pkt/s",
-                                 font=("Courier", 10), fg="gray")
+        self.lbl_rate = ttk.Label(toolbar, text="0 pkt/s",
+                                  font=FONTS["small"])
         self.lbl_rate.pack(side=tk.RIGHT, padx=8)
 
         # Main content area
-        content = tk.Frame(self.root)
+        content = ttk.Frame(self.root)
         content.pack(fill=tk.BOTH, expand=True, padx=8, pady=4)
 
         # Left: angle plot
-        left = tk.Frame(content)
+        left = ttk.Frame(content)
         left.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         if HAS_MPL:
             self.fig, self.ax = plt.subplots(figsize=(6, 3.5))
-            self.fig.patch.set_facecolor("#f8f8f8")
-            self.ax.set_facecolor("#f8f8f8")
-            self.ax.set_title("Pitch & Roll  (degrees)", fontsize=11)
+            # self.fig.patch.set_facecolor("#f8f8f8")
+            # self.ax.set_facecolor("#f8f8f8")
+            self.ax.set_title("Pitch & Roll  (degrees)", fontsize=14)
             self.ax.set_ylim(-45, 45)
             self.ax.set_xlabel("time (s)")
             self.ax.set_ylabel("degrees")
@@ -129,83 +139,96 @@ class QTCApp:
             self.ax.grid(True, linestyle=":", linewidth=0.5)
             self.line_pitch, = self.ax.plot([], [], label="pitch", color="#E24B4A", linewidth=1.5)
             self.line_roll,  = self.ax.plot([], [], label="roll",  color="#378ADD", linewidth=1.5)
-            self.ax.legend(loc="upper right", fontsize=9)
+            self.ax.legend(loc="upper right", fontsize=12)
             self.fig.tight_layout()
             canvas = FigureCanvasTkAgg(self.fig, master=left)
             canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
             self.mpl_canvas = canvas
         else:
-            tk.Label(left, text="Install matplotlib for live plots\n(pip install matplotlib)",
-                     fg="gray").pack(expand=True)
+            ttk.Label(left, text="Install matplotlib for live plots\n(pip install matplotlib)",
+                      bootstyle="secondary").pack(expand=True)
 
         # Right: live values + motor bars
-        right = tk.Frame(content, width=260)
+        right = ttk.Frame(content, width=260)
         right.pack(side=tk.RIGHT, fill=tk.Y, padx=(8, 0))
         right.pack_propagate(False)
 
-        tk.Label(right, text="Live values", font=("Helvetica", 11, "bold")).pack(anchor=tk.W)
+        ttk.Label(right, text="Live values",
+                  font=("Helvetica", 11, "bold"),
+                  bootstyle="info").pack(anchor=tk.W)
         self.live_vars = {}
         for field in ["pitch", "roll", "yaw_rate", "throttle",
                        "m_fl", "m_fr", "m_rl", "m_rr"]:
-            row = tk.Frame(right)
+            row = ttk.Frame(right)
             row.pack(fill=tk.X, pady=1)
-            tk.Label(row, text=f"{field}:", width=12, anchor=tk.W,
-                     font=("Courier", 10)).pack(side=tk.LEFT)
+            ttk.Label(row, text=f"{field}:", width=12, anchor=tk.W,
+                      font=("Courier", 10),
+                      bootstyle="secondary").pack(side=tk.LEFT)
             v = tk.StringVar(value="—")
-            tk.Label(row, textvariable=v, font=("Courier", 10),
-                     anchor=tk.E, width=8).pack(side=tk.RIGHT)
+            ttk.Label(row, textvariable=v, font=("Courier", 10),
+                      anchor=tk.E, width=8,
+                      bootstyle="light").pack(side=tk.RIGHT)
             self.live_vars[field] = v
 
         # Separator
         ttk.Separator(right, orient="horizontal").pack(fill=tk.X, pady=6)
 
         # Motor PWM bars
-        tk.Label(right, text="Motor PWM (µs)", font=("Helvetica", 10, "bold")).pack(anchor=tk.W)
+        ttk.Label(right, text="Motor PWM (µs)",
+                  font=("Helvetica", 10, "bold"),
+                  bootstyle="info").pack(anchor=tk.W)
         self.motor_bars = {}
         self.motor_bar_vars = {}
         for m in ["m_fl", "m_fr", "m_rl", "m_rr"]:
-            row = tk.Frame(right)
+            row = ttk.Frame(right)
             row.pack(fill=tk.X, pady=2)
-            tk.Label(row, text=m, width=5, font=("Courier", 9)).pack(side=tk.LEFT)
+            ttk.Label(row, text=m, width=5, font=("Courier", 9)).pack(side=tk.LEFT)
             bar = ttk.Progressbar(row, length=160, maximum=1000, value=0)
             bar.pack(side=tk.LEFT, padx=4)
             self.motor_bars[m] = bar
 
         # Bottom: PID sliders
-        pid_frame = ttk.LabelFrame(self.root, text="PID Gains", padding=8)
+        pid_frame = ttk.Labelframe(self.root, text="PID Gains", padding=8)
         pid_frame.pack(fill=tk.X, padx=8, pady=4)
 
         self.gain_vars = {}
         for col, axis in enumerate(AXES):
-            grp = tk.Frame(pid_frame)
+            grp = ttk.Frame(pid_frame)
             grp.grid(row=0, column=col, padx=16, sticky=tk.N)
-            tk.Label(grp, text=axis.upper(),
-                     font=("Helvetica", 10, "bold")).grid(row=0, column=0,
-                                                           columnspan=3, pady=(0, 4))
+            ttk.Label(grp, text=axis.upper(),
+                      font=("Helvetica", 10, "bold")).grid(row=0, column=0,
+                                                columnspan=3, pady=(0, 4))
             self.gain_vars[axis] = {}
             for r, g in enumerate(["kp", "ki", "kd"]):
-                tk.Label(grp, text=g, width=3, font=("Courier", 10)).grid(
+                ttk.Label(grp, text=g, width=3, font=("Courier", 10)).grid(
                     row=r+1, column=0, sticky=tk.E)
                 v = tk.DoubleVar(value=DEFAULT_GAINS[axis][g])
                 self.gain_vars[axis][g] = v
                 step = 0.001 if g in ("ki", "kd") else 0.01
-                scale = tk.Scale(grp, variable=v, from_=0.0, to=5.0,
-                                  resolution=step, orient=tk.HORIZONTAL,
-                                  length=160, showvalue=True,
-                                  font=("Courier", 9))
+                value_label = ttk.Label(grp, width=7, anchor=tk.E,
+                                        font=("Courier", 9))
+                scale = ttk.Scale(grp, variable=v, from_=0.0, to=5.0,
+                                  orient=tk.HORIZONTAL, length=160,
+                                  command=lambda value, var=v, label=value_label, increment=step:
+                                      self._update_gain_value(var, label, increment))
+                v.trace_add("write", lambda *args, var=v, label=value_label, increment=step:
+                            self._update_gain_value(var, label, increment))
                 scale.grid(row=r+1, column=1, padx=4)
+                value_label.grid(row=r+1, column=2, sticky=tk.E)
+                self._update_gain_value(v, value_label, step)
 
         # Send button
-        btn_row = tk.Frame(pid_frame)
+        btn_row = ttk.Frame(pid_frame)
         btn_row.grid(row=0, column=len(AXES), padx=16, sticky=tk.N+tk.S)
-        tk.Button(btn_row, text="Send\nGains", command=self._send_gains,
-                  width=8, height=3, bg="#378ADD", fg="white",
-                  font=("Helvetica", 10, "bold")).pack(expand=True)
+        ttk.Button(btn_row, text="Send\nGains", command=self._send_gains,
+                   width=8,
+                   padding=(8, 18)).pack(expand=True)
 
         # Status bar
-        self.lbl_statusbar = tk.Label(self.root, text="Not connected.",
-                                       bd=1, relief=tk.SUNKEN, anchor=tk.W,
-                                       font=("Courier", 9), fg="gray")
+        status_frame = ttk.Labelframe(self.root, padding=8)
+        status_frame.pack(fill=tk.X, padx=8, pady=4)
+        self.lbl_statusbar = ttk.Label(status_frame, text="Not connected.", anchor=tk.W,
+                                       font=("Courier", 9))
         self.lbl_statusbar.pack(side=tk.BOTTOM, fill=tk.X)
 
         # Periodic UI refresh
@@ -219,16 +242,18 @@ class QTCApp:
             try:
                 self.client.start()
                 self.connected = True
-                self.btn_connect.config(text="Disconnect", bg="#E24B4A")
-                self.lbl_status.config(text="Connected to esp32drone", fg="green")
-                self.lbl_statusbar.config(text="UDP listening on port 4444. Waiting for first packet...")
+                self.btn_connect.config(text="Disconnect", bootstyle="danger")
+                self.lbl_status.config(text="Connected to EDNA", bootstyle="success")
+                self.lbl_statusbar.config(
+                    text="UDP listening on port 4444. Waiting for first packet...",
+                    bootstyle="info")
             except Exception as e:
                 messagebox.showerror("Connection error", str(e))
         else:
             self.client.stop()
             self.connected = False
-            self.btn_connect.config(text="Connect", bg="#4CAF50")
-            self.lbl_status.config(text="Disconnected", fg="gray")
+            self.btn_connect.config(text="Connect", bootstyle="success")
+            self.lbl_status.config(text="Disconnected", bootstyle="secondary")
 
     # -----------------------------------------------------------------------
     # Packet handler (runs in UDP receive thread)
@@ -271,7 +296,7 @@ class QTCApp:
                  f"thr:{d.get('throttle',0)} µs  "
                  f"m_fl:{d.get('m_fl',0)} m_fr:{d.get('m_fr',0)} "
                  f"m_rl:{d.get('m_rl',0)} m_rr:{d.get('m_rr',0)}",
-            fg="black"
+            bootstyle="light"
         )
 
     # -----------------------------------------------------------------------
@@ -303,11 +328,15 @@ class QTCApp:
             ki = self.gain_vars[axis]["ki"].get()
             kd = self.gain_vars[axis]["kd"].get()
             self.client.send_pid(axis, kp, ki, kd)
-        self.lbl_statusbar.config(text="PID gains sent.", fg="blue")
+        self.lbl_statusbar.config(text="PID gains sent.", bootstyle="primary")
 
     # -----------------------------------------------------------------------
     # Misc
     # -----------------------------------------------------------------------
+    def _update_gain_value(self, var, label, increment):
+        places = 3 if increment < 0.01 else 2
+        label.config(text=f"{var.get():.{places}f}")
+
     def _update_rate_label(self):
         now = time.time()
         elapsed = now - self._rate_ts
@@ -322,12 +351,13 @@ class QTCApp:
         if self.connected:
             self.client.stop()
         self.root.destroy()
+        sys.exit()
 
 
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    root = tk.Tk()
+    root = ttk.Window(themename="darkly")
     app = QTCApp(root)
     root.mainloop()
