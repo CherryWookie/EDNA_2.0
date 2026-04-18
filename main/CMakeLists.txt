@@ -13,4 +13,5 @@ idf_component_register(
         esp_timer
         bluepad32_component
         btstack
+        controller
 )

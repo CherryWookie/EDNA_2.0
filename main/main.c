@@ -30,6 +30,7 @@
 #include "wifi_server.h"
 #include "telemetry.h"
 #include "esp_timer.h"
+// #include "esc_calibration.h"
 
 
 
@@ -45,6 +46,7 @@ volatile float g_yaw_rate  = 0.0f;   // deg/s from gyro Z (remapped)
 // Shared setpoints — written by controller task, read by flight controller.
 SemaphoreHandle_t setpoint_mutex;
 volatile int   g_throttle  = ESC_PWM_ARM_US;
+volatile int g_motors_killed = 0;
 volatile float g_pitch_sp  = 0.0f;
 volatile float g_roll_sp   = 0.0f;
 volatile float g_yaw_sp    = 0.0f;
@@ -80,8 +82,8 @@ static void imu_task(void *arg) {
         float roll  = kalman_update(&kf_roll,  accel_roll,  raw.gyro_y_dps, dt);
 
         if (xSemaphoreTake(imu_mutex, 0) == pdTRUE) {
-            g_pitch_deg = pitch;
-            g_roll_deg  = roll;
+            g_pitch_deg = pitch - IMU_PITCH_OFFSET_DEG;
+            g_roll_deg  = roll  - IMU_ROLL_OFFSET_DEG;
             g_yaw_rate  = raw.gyro_z_dps;
             xSemaphoreGive(imu_mutex);
         }
@@ -92,7 +94,6 @@ static void imu_task(void *arg) {
     }
 }
 
-// Flight controller task (high priority, pinned to core 1)
 static void flight_ctrl_task(void *arg) {
     flight_controller_init();
     TickType_t last_wake = xTaskGetTickCount();
@@ -100,11 +101,15 @@ static void flight_ctrl_task(void *arg) {
     while (1) {
         vTaskDelayUntil(&last_wake, pdMS_TO_TICKS(FC_LOOP_PERIOD_MS));
 
-        float pitch, roll, yaw_rate;
-        int   throttle;
-        float pitch_sp, roll_sp, yaw_sp;
+        float pitch    = 0.0f;
+        float roll     = 0.0f;
+        float yaw_rate = 0.0f;
+        int   throttle = ESC_PWM_ARM_US;
+        float pitch_sp = 0.0f;
+        float roll_sp  = 0.0f;
+        float yaw_sp   = 0.0f;
+        int   killed   = 0;
 
-        // Snapshot shared state
         if (xSemaphoreTake(imu_mutex, pdMS_TO_TICKS(2)) == pdTRUE) {
             pitch    = g_pitch_deg;
             roll     = g_roll_deg;
@@ -117,10 +122,16 @@ static void flight_ctrl_task(void *arg) {
             pitch_sp = g_pitch_sp;
             roll_sp  = g_roll_sp;
             yaw_sp   = g_yaw_sp;
+            killed   = g_motors_killed;
             xSemaphoreGive(setpoint_mutex);
         } else continue;
 
-        // Safety cutoff — kill motors if attitude exceeds limit
+        if (killed) {
+            esc_set_all_us(ESC_PWM_ARM_US);
+            flight_controller_reset_integrals();
+            continue;
+        }
+
         if (pitch > ANGLE_LIMIT_DEG || pitch < -ANGLE_LIMIT_DEG ||
             roll  > ANGLE_LIMIT_DEG || roll  < -ANGLE_LIMIT_DEG) {
             esc_set_all_us(ESC_PWM_ARM_US);
@@ -170,6 +181,7 @@ void app_main(void) {
     ESP_LOGI(TAG, "MPU-6050 OK");
 
     ESP_ERROR_CHECK(esc_init());
+    // esc_calibrate();
     esc_arm();
     ESP_LOGI(TAG, "ESCs armed");
 

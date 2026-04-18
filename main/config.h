@@ -16,16 +16,20 @@
 //
 // NOTE: Replace these with your actual wired GPIOs before flashing.
 // -----------------------------------------------------------------------------
-#define ESC_M1_GPIO     25      // Front-left
-#define ESC_M2_GPIO     26      // Front-right
-#define ESC_M3_GPIO     27      // Rear-left
-#define ESC_M4_GPIO     32      // Rear-right
+#define ESC_M1_GPIO     5      // Front-left
+#define ESC_M2_GPIO     19      // Front-right
+#define ESC_M3_GPIO     18      // Rear-left
+#define ESC_M4_GPIO     33      // Rear-right
 
 // ESC PWM pulse width limits (microseconds)
 #define ESC_PWM_MIN_US  1000
 #define ESC_PWM_MAX_US  2000
 #define ESC_PWM_ARM_US  1000    // Value sent during arming / idle
-#define ESC_PWM_FREQ_HZ 50      // Standard 50 Hz PWM for ESCs
+#define ESC_PWM_FREQ_HZ 50      // Standard 50 Hz PWM for 
+
+// Accumulative throttle tuning
+#define THROTTLE_ACCEL_MAX_US_PER_CALL  20   // max µs change per callback at full stick
+#define THROTTLE_ACCEL_MIN_US_PER_CALL  1    // min µs change per callback at slight deflection 
 
 // LEDC timer and channel assignments (one channel per motor)
 #define ESC_LEDC_TIMER      LEDC_TIMER_0
@@ -39,6 +43,9 @@
 // -----------------------------------------------------------------------------
 // MPU-6050 I2C
 // -----------------------------------------------------------------------------
+#define IMU_PITCH_OFFSET_DEG   11.70f   // from your log: pitch was 11.70 at rest
+#define IMU_ROLL_OFFSET_DEG     0.94f   // from your log: roll was 0.94 at rest
+
 #define IMU_I2C_PORT    I2C_NUM_0
 #define IMU_SDA_GPIO    21
 #define IMU_SCL_GPIO    22
@@ -110,6 +117,6 @@
 // Set to 1 to enable verbose serial output from each module.
 // -----------------------------------------------------------------------------
 #define DEBUG_IMU       0
-#define DEBUG_PID       1    // Enable for Serial Plotter tuning
+#define DEBUG_PID       1   // Enable for Serial Plotter tuning
 #define DEBUG_MOTORS    0
 #define DEBUG_CONTROLLER 0
