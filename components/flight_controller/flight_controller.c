@@ -11,10 +11,12 @@
 #include "flight_controller.h"
 #include "motor_mix.h"
 #include "esc.h"
+#include "telemetry.h"    // ← must be here
 #include "config.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include <stdio.h>
+
 
 static const char *TAG = "FC";
 
@@ -49,7 +51,7 @@ void flight_controller_update(int   throttle_us,
 
     // If throttle is at minimum, hold all PIDs reset and kill motors.
     // This prevents integral windup while sitting on the ground.
-    if (throttle_us <= ESC_PWM_MIN_US + 20) {
+    if (throttle_us <= ESC_PWM_SPIN_US) {
         flight_controller_reset_integrals();
         esc_set_all_us(ESC_PWM_ARM_US);
         return;
@@ -63,6 +65,8 @@ void flight_controller_update(int   throttle_us,
     // Mix and write to ESCs
     motor_outputs_t motors = motor_mix(throttle_us, out_pitch, out_roll, out_yaw);
     esc_set_motors_us(motors.fl, motors.fr, motors.rl, motors.rr);
+    telemetry_set_motor_values(motors.fl, motors.fr, motors.rl, motors.rr);  // ← add
+    telemetry_set_pid_outputs(out_pitch, out_roll, out_yaw);  
 
 #if DEBUG_PID
     // Arduino Serial Plotter / QTC compatible format

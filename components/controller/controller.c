@@ -203,7 +203,7 @@ static const char *TAG = "CTRL";
 static int s_connected = 0;
 
 // Persistent throttle state — accumulates over time
-static int s_throttle_us = ESC_PWM_ARM_US;
+static int s_throttle_us = ESC_PWM_SPIN_US;
 
 // Shared globals declared in main.c
 extern volatile int   g_throttle;
@@ -245,7 +245,7 @@ static int accumulate_throttle(int raw) {
 
     // Clamp
     if (s_throttle_us < ESC_PWM_MIN_US) s_throttle_us = ESC_PWM_MIN_US;
-    if (s_throttle_us > ESC_PWM_MAX_US) s_throttle_us = ESC_PWM_MAX_US;
+    if (s_throttle_us > ESC_PWM_FLIGHT_MAX_US) s_throttle_us = ESC_PWM_FLIGHT_MAX_US;
 
     return s_throttle_us;
 }

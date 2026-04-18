@@ -23,12 +23,14 @@
 
 // ESC PWM pulse width limits (microseconds)
 #define ESC_PWM_MIN_US  1000
-#define ESC_PWM_MAX_US  2000
+#define ESC_PWM_MAX_US  1600    // MAX motor value
+#define ESC_PWM_FLIGHT_MAX_US 1300  // Throttle Ceiling for testing
 #define ESC_PWM_ARM_US  1000    // Value sent during arming / idle
 #define ESC_PWM_FREQ_HZ 50      // Standard 50 Hz PWM for 
+#define ESC_PWM_SPIN_US 1200
 
 // Accumulative throttle tuning
-#define THROTTLE_ACCEL_MAX_US_PER_CALL  3   // max µs change per callback at full stick
+#define THROTTLE_ACCEL_MAX_US_PER_CALL  2   // max µs change per callback at full stick
 #define THROTTLE_ACCEL_MIN_US_PER_CALL  1    // min µs change per callback at slight deflection 
 
 // LEDC timer and channel assignments (one channel per motor)
@@ -43,8 +45,8 @@
 // -----------------------------------------------------------------------------
 // MPU-6050 I2C
 // -----------------------------------------------------------------------------
-#define IMU_PITCH_OFFSET_DEG   11.70f   // from your log: pitch was 11.70 at rest
-#define IMU_ROLL_OFFSET_DEG     0.94f   // from your log: roll was 0.94 at rest
+#define IMU_PITCH_OFFSET_DEG   -0.30f   // from your log: pitch was 11.70 at rest
+#define IMU_ROLL_OFFSET_DEG     12.07f   // from your log: roll was 0.94 at rest
 
 #define IMU_I2C_PORT    I2C_NUM_0
 #define IMU_SDA_GPIO    21
@@ -69,20 +71,20 @@
 // PID defaults  (tune via serial or WiFi QTC — do not need reflash)
 // These are conservative starting values. Kp first, then Kd, then Ki.
 // -----------------------------------------------------------------------------
-#define PID_PITCH_KP    1.2f
-#define PID_PITCH_KI    0.01f
-#define PID_PITCH_KD    0.08f
+#define PID_PITCH_KP    2.0f
+#define PID_PITCH_KI    0.1f
+#define PID_PITCH_KD    0.0f
 
-#define PID_ROLL_KP     1.2f
-#define PID_ROLL_KI     0.01f
-#define PID_ROLL_KD     0.08f
+#define PID_ROLL_KP     2.0f
+#define PID_ROLL_KI     0.1f
+#define PID_ROLL_KD     0.0f
 
-#define PID_YAW_KP      2.0f
-#define PID_YAW_KI      0.05f
+#define PID_YAW_KP      0.0f
+#define PID_YAW_KI      0.0f
 #define PID_YAW_KD      0.0f
 
-#define PID_OUTPUT_LIMIT    400.0f   // Max correction added/subtracted from throttle
-#define PID_INTEGRAL_LIMIT  200.0f   // Anti-windup clamp
+#define PID_OUTPUT_LIMIT    100.0f   // Max correction added/subtracted from throttle
+#define PID_INTEGRAL_LIMIT  0.0f   // Anti-windup clamp
 
 // -----------------------------------------------------------------------------
 // Angle limits (degrees) — safety cutoff

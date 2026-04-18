@@ -78,8 +78,8 @@ static void imu_task(void *arg) {
         float accel_pitch = raw.accel_angle_pitch;
         float accel_roll  = raw.accel_angle_roll;
 
-        float pitch = kalman_update(&kf_pitch, accel_pitch, raw.gyro_x_dps, dt);
-        float roll  = kalman_update(&kf_roll,  accel_roll,  raw.gyro_y_dps, dt);
+        float pitch = kalman_update(&kf_roll, accel_pitch, raw.gyro_x_dps, dt);
+        float roll  = kalman_update(&kf_pitch,  accel_roll,  raw.gyro_y_dps, dt);
 
         if (xSemaphoreTake(imu_mutex, 0) == pdTRUE) {
             g_pitch_deg = pitch - IMU_PITCH_OFFSET_DEG;
@@ -140,6 +140,13 @@ static void flight_ctrl_task(void *arg) {
             continue;
         }
 
+        // Reset integrators when throttle is too low to spin motors
+        // so windup doesn't cause a jump on spool-up
+        if (throttle <= ESC_PWM_SPIN_US) {
+            flight_controller_reset_integrals();
+        }
+
+
         flight_controller_update(throttle, pitch_sp, roll_sp, yaw_sp,
                                  pitch, roll, yaw_rate);
     }
@@ -181,9 +188,45 @@ void app_main(void) {
     ESP_LOGI(TAG, "MPU-6050 OK");
 
     ESP_ERROR_CHECK(esc_init());
+
     // esc_calibrate();
     esc_arm();
     ESP_LOGI(TAG, "ESCs armed");
+
+    // // Motor identification test — remove after confirming layout
+    // // Watch which motor spins for each step
+
+    // ESP_LOGI(TAG, "Motor test starting in 3 seconds — PROPS OFF");
+    // vTaskDelay(pdMS_TO_TICKS(10000));
+
+    // ESP_LOGI(TAG, "M1 — should be FRONT LEFT");
+    // esc_set_us(MOTOR_FL, 1250);
+    // vTaskDelay(pdMS_TO_TICKS(2000));
+    // esc_set_us(MOTOR_FL, ESC_PWM_MIN_US);
+    // vTaskDelay(pdMS_TO_TICKS(1000));
+
+    // ESP_LOGI(TAG, "M2 — should be FRONT RIGHT");
+    // esc_set_us(MOTOR_FR, 1250);
+    // vTaskDelay(pdMS_TO_TICKS(2000));
+    // esc_set_us(MOTOR_FR, ESC_PWM_MIN_US);
+    // vTaskDelay(pdMS_TO_TICKS(1000));
+
+    // ESP_LOGI(TAG, "M3 — should be REAR LEFT");
+    // esc_set_us(MOTOR_RL, 1250);
+    // vTaskDelay(pdMS_TO_TICKS(2000));
+    // esc_set_us(MOTOR_RL, ESC_PWM_MIN_US);
+    // vTaskDelay(pdMS_TO_TICKS(1000));
+
+    // ESP_LOGI(TAG, "M4 — should be REAR RIGHT");
+    // esc_set_us(MOTOR_RR, 1250);
+    // vTaskDelay(pdMS_TO_TICKS(2000));
+    // esc_set_us(MOTOR_RR, ESC_PWM_MIN_US);
+    // vTaskDelay(pdMS_TO_TICKS(1000));
+
+    // ESP_LOGI(TAG, "Motor test complete");
+
+
+
 
     btstack_init(); 
     controller_init();

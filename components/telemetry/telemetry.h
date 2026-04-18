@@ -1,5 +1,4 @@
 #pragma once
-
 // =============================================================================
 // telemetry.h
 // UDP telemetry: sends live flight data to the QTC console at 50 Hz,
@@ -11,8 +10,8 @@
 // Both directions use the same UDP socket managed by wifi_server.c.
 // The client address is learned from the first inbound packet.
 // =============================================================================
-
 #include "esp_err.h"
+#include <stdint.h>
 
 // Call once after wifi_server_init()
 void telemetry_init(void);
@@ -24,3 +23,8 @@ void telemetry_send(void);
 // Check for an inbound PID gain update packet (non-blocking).
 // If a valid packet is received, hot-updates the named PID instance.
 void telemetry_receive_pid_updates(void);
+
+// Called by flight_controller after each update to cache latest values.
+// These are read by telemetry_send() on the next 50 Hz tick.
+void telemetry_set_motor_values(uint32_t fl, uint32_t fr, uint32_t rl, uint32_t rr);
+void telemetry_set_pid_outputs(float pitch, float roll, float yaw);

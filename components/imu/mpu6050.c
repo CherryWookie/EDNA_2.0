@@ -141,12 +141,12 @@ esp_err_t mpu6050_read(mpu6050_data_t *out) {
     out->gyro_z_dps = -gx_sf;  // yaw rate
 
     // Accel-derived angles (degrees) — atan2 is more stable than asin
-    out->accel_angle_pitch = atan2f(-out->accel_x_g,
+    out->accel_angle_roll = atan2f(-out->accel_x_g,
                                      sqrtf(out->accel_y_g * out->accel_y_g +
                                            out->accel_z_g * out->accel_z_g))
                              * (180.0f / M_PI);
 
-    out->accel_angle_roll  = atan2f(out->accel_y_g, out->accel_z_g)
+    out->accel_angle_pitch  = atan2f(out->accel_y_g, out->accel_z_g)
                              * (180.0f / M_PI);
 
     return ESP_OK;
