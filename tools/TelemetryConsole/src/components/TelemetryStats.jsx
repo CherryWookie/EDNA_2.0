@@ -1,4 +1,5 @@
 import React from "react";
+import "./TelemetryStats.css";
 
 const attitudeStats = [
   { key: "roll", label: "Roll", unit: "deg" },
@@ -9,30 +10,38 @@ const attitudeStats = [
 
 function TelemetryStats({ packet, health }) {
   return (
-    <section className="stats">
+    <section className="TelemetryStats">
       {/* Roll */}
       <article className="metric-tile">
         <span>Roll</span>
-        <strong>{format(packet["roll"])}</strong>
-        <small>deg</small>
+        <div>
+          <strong>{format(packet["roll"])}</strong>
+          <small>deg</small>
+        </div>
       </article>
       {/* Pitch */}
       <article className="metric-tile">
         <span>Pitch</span>
-        <strong>{format(packet["pitch"])}</strong>
-        <small>deg</small>
+        <div>
+          <strong>{format(packet["pitch"])}</strong>
+          <small>deg</small>
+        </div>
       </article>
       {/* Yaw Rate */}
       <article className="metric-tile">
         <span>Yaw Rate</span>
-        <strong>{format(packet["yaw_rate"])}</strong>
-        <small>deg/s</small>
+        <div>
+          <strong>{format(packet["yaw_rate"])}</strong>
+          <small>deg/s</small>
+        </div>
       </article>
       {/* Throttle */}
       <article className="metric-tile">
         <span>Throttle</span>
-        <strong>{format(packet["throttle"])}</strong>
-        <small>&micro;s</small>
+        <div>
+          <strong>{format(packet["throttle"])}</strong>
+          <small>&micro;s</small>
+        </div>
       </article>
       {/* {attitudeStats.map((stat) => (
         <article className="metric-tile" key={stat.key}>
