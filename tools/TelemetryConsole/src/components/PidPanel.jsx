@@ -1,6 +1,6 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import "./PidPanel.css";
-import { Button, Colors, NumericInput } from "@blueprintjs/core";
+import { Button, Colors, FormGroup, NumericInput, Popover } from "@blueprintjs/core";
 import { Line, LineChart, ResponsiveContainer, YAxis } from "recharts";
 
 const axes = ["pitch", "roll", "yaw"];
@@ -14,6 +14,10 @@ const responseTargets = {
 
 function PidPanel({ drafts, lastConfirmedDrafts, onDraftsChange, onUndoChanges, onSend, connected }) {
   const hasUnsavedChanges = !pidDraftsEqual(drafts, lastConfirmedDrafts);
+  const [graphSettings, setGraphSettings] = useState({
+    timespan: "2",
+    samples: "100",
+  });
 
   return (
     <section className="PidPanel panel pid-panel">
@@ -25,12 +29,59 @@ function PidPanel({ drafts, lastConfirmedDrafts, onDraftsChange, onUndoChanges, 
         <div className="panel-actions">
           <Button
             disabled={!connected}
-            intent={connected ? "success" : "none"}
+            intent={connected ? "success" : undefined}
             icon={connected ? "send-message" : "issue"}
+            onClick={() => onSend(drafts)}
           >
             {connected ? "Send All" : "Connect to Send"}
           </Button>{" "}
-          <Button icon="reset" disabled={!hasUnsavedChanges} onClick={onUndoChanges}></Button>
+          <Button icon="reset" disabled={!hasUnsavedChanges} onClick={onUndoChanges} />
+          {/* timespan and sample size settings */}
+          <Popover
+            placement="bottom-end"
+            content={
+              <div className="pid-settings-popover">
+                <p className="eyebrow">Settings</p>
+                <h3>PID Graphs</h3>
+                <FormGroup label="Timespan (s)">
+                  <NumericInput
+                    min={0.1}
+                    max={30}
+                    stepSize={0.25}
+                    minorStepSize={0.05}
+                    majorStepSize={1}
+                    buttonPosition="none"
+                    value={graphSettings.timespan}
+                    onValueChange={(_value, valueAsString) =>
+                      setGraphSettings({
+                        ...graphSettings,
+                        timespan: valueAsString,
+                      })
+                    }
+                  />
+                </FormGroup>
+                <FormGroup label="Samples">
+                  <NumericInput
+                    min={10}
+                    max={1000}
+                    stepSize={10}
+                    minorStepSize={1}
+                    majorStepSize={50}
+                    buttonPosition="none"
+                    value={graphSettings.samples}
+                    onValueChange={(_value, valueAsString) =>
+                      setGraphSettings({
+                        ...graphSettings,
+                        samples: valueAsString,
+                      })
+                    }
+                  />
+                </FormGroup>
+              </div>
+            }
+          >
+            <Button icon="cog" />
+          </Popover>
           {/* {connected ? (
             <Button intent="success" icon="send-message" disabled={!connected} onClick={() => onSend(drafts)}>
               Send all
@@ -73,7 +124,7 @@ function PidPanel({ drafts, lastConfirmedDrafts, onDraftsChange, onUndoChanges, 
                   </label>
                 ))}
               </div>
-              <PidAxisChart axis={axis} gains={drafts[axis]} />
+              <PidAxisChart axis={axis} gains={drafts[axis]} settings={graphSettings} />
             </div>
           </article>
         ))}
@@ -82,8 +133,8 @@ function PidPanel({ drafts, lastConfirmedDrafts, onDraftsChange, onUndoChanges, 
   );
 }
 
-function PidAxisChart({ axis, gains }) {
-  const data = useMemo(() => simulatePidResponse(axis, gains), [axis, gains]);
+function PidAxisChart({ axis, gains, settings }) {
+  const data = useMemo(() => simulatePidResponse(axis, gains, settings), [axis, gains, settings]);
 
   return (
     <div className="pid-chart">
@@ -113,12 +164,15 @@ function PidAxisChart({ axis, gains }) {
   );
 }
 
-function simulatePidResponse(axis, gainsForAxis) {
+function simulatePidResponse(axis, gainsForAxis, settings) {
+  const timespan = positiveNumber(settings?.timespan, 1);
+  const samples = clamp(Math.round(positiveNumber(settings?.samples, 100)), 10, 1000);
   const target = responseTargets[axis];
   const kp = parseGain(gainsForAxis?.kp);
   const ki = parseGain(gainsForAxis?.ki);
   const kd = parseGain(gainsForAxis?.kd);
-  const dt = 0.045;
+
+  const dt = timespan / Math.max(samples - 1, 1);
   const points = [];
 
   let response = 0;
@@ -126,7 +180,7 @@ function simulatePidResponse(axis, gainsForAxis) {
   let integral = 0;
   let previousError = target;
 
-  for (let i = 0; i < 170; i += 1) {
+  for (let i = 0; i < samples; i += 1) {
     const error = target - response;
     integral = clamp(integral + error * dt, -80, 80);
     const derivative = (error - previousError) / dt;
@@ -151,6 +205,11 @@ function simulatePidResponse(axis, gainsForAxis) {
 function parseGain(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function positiveNumber(value, fallback) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 function clamp(value, min, max) {

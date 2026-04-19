@@ -82,3 +82,29 @@
     }
   }
 }
+.pid-settings-popover {
+  width: 260px;
+  padding: 14px;
+  border-radius: 8px;
+  /* background: var(--dark-gray-1); */
+}
+
+.pid-settings-popover h3 {
+  margin: 0 0 14px;
+  color: #f5faf7;
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+.pid-settings-popover .bp6-form-group {
+  margin-bottom: 12px;
+}
+
+.pid-settings-popover .bp6-form-group:last-child {
+  margin-bottom: 0;
+}
+
+.pid-settings-popover .bp6-label {
+  color: #a9b5af;
+  font-size: 12px;
+}
