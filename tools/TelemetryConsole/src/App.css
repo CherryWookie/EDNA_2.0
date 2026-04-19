@@ -4,25 +4,24 @@
 
 .app-shell {
   min-height: 100vh;
-  padding: 18px;
-  background: linear-gradient(180deg, rgba(26, 31, 29, 0.98), rgba(10, 12, 11, 1)), #0b0d0c;
-  color: #eef3f0;
+  padding: 16px;
+  color: var(--white);
 }
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: minmax(360px, 1.15fr) minmax(300px, 0.85fr);
-  grid-template-rows: auto minmax(360px, 1fr) minmax(260px, auto);
-  gap: 14px;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: auto;
+  gap: 8px;
   max-width: 1640px;
   margin: 0 auto;
 }
 
 .panel,
 .metric-tile {
-  border: 1px solid #2c3732;
+  border: 1px solid var(--dark-gray-4);
   border-radius: 8px;
-  background: #151917;
+  background: var(--black);
   box-shadow: 0 16px 50px rgba(0, 0, 0, 0.26);
 }
 
@@ -52,26 +51,11 @@
 
 .eyebrow {
   margin: 0 0 3px;
-  color: #7bd8ad;
+  color: var(--green-5);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0;
   text-transform: uppercase;
-}
-
-.stats {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(130px, 1fr));
-  gap: 14px;
-}
-
-.metric-tile {
-  min-height: 104px;
-  padding: 15px;
-  display: grid;
-  align-content: center;
-  gap: 4px;
 }
 
 .metric-tile span,
@@ -83,7 +67,7 @@
 
 .metric-tile strong {
   color: #f7faf8;
-  font-size: 34px;
+  font-size: 24px;
   line-height: 1;
 }
 
@@ -99,14 +83,6 @@
   min-height: 360px;
 }
 
-.chart-panel {
-  min-height: 360px;
-}
-
-.chart-panel .recharts-responsive-container {
-  min-height: 285px;
-}
-
 .legend-row {
   display: flex;
   align-items: center;
@@ -120,18 +96,6 @@
   height: 9px;
   border-radius: 999px;
   display: inline-block;
-}
-
-.legend-dot.roll {
-  background: #37d399;
-}
-
-.legend-dot.pitch {
-  background: #f5c84b;
-}
-
-.legend-dot.yaw {
-  background: #ff6b7a;
 }
 
 .readout-pill {
@@ -333,36 +297,6 @@
   transition: width 100ms linear;
 }
 
-.pid-panel {
-  grid-column: span 2;
-}
-
-.pid-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(190px, 1fr));
-  gap: 12px;
-}
-
-.pid-axis {
-  border: 1px solid #2d3833;
-  border-radius: 8px;
-  padding: 13px;
-  background: #101311;
-}
-
-.pid-axis header,
-.gain-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.pid-axis header {
-  margin-bottom: 12px;
-  text-transform: capitalize;
-}
-
 .gain-row {
   margin-top: 9px;
 }
@@ -408,7 +342,7 @@
   }
 
   .metric-tile strong {
-    font-size: 30px;
+    font-size: 24px;
   }
 
   .attitude-footer {

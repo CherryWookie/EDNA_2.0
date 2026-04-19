@@ -153,20 +153,26 @@ export function useTelemetry() {
     }
   }, []);
 
-  const sendPid = useCallback(async (axis, gains) => {
+  const sendPid = useCallback(async (drafts) => {
     setError("");
 
     try {
-      await invoke("send_pid_update", {
-        update: {
-          axis,
-          kp: Number(gains.kp),
-          ki: Number(gains.ki),
-          kd: Number(gains.kd),
-        },
-      });
+      await Promise.all(
+        ["pitch", "roll", "yaw"].map((axis) =>
+          invoke("send_pid_update", {
+            update: {
+              axis,
+              kp: Number(drafts[axis].kp),
+              ki: Number(drafts[axis].ki),
+              kd: Number(drafts[axis].kd),
+            },
+          }),
+        ),
+      );
+      return true;
     } catch (err) {
       setError(String(err));
+      return false;
     }
   }, []);
 
